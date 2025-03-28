@@ -12,6 +12,8 @@ const AdminPanel = () => {
   const [selectedSeason, setSelectedSeason] = useState("");
   const [uploading, setUploading] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const [buttonState, setButtonState] = useState("add"); // "add" or "confirm"
+  const [timeoutId, setTimeoutId] = useState(null);
   const navigate = useNavigate();
 
   // Authentication Check
@@ -140,15 +142,24 @@ const AdminPanel = () => {
           <option value="Season 2">Season 2</option>
         </select>
         <button
-          onClick={handleTaskSubmit}
-          disabled={uploading}
-          className={`w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
-            uploading && "cursor-not-allowed"
-          }`}
-          style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
-        >
-          {uploading ? "Uploading..." : "Add Task"}
-        </button>
+  onClick={() => {
+    if (buttonState === "confirm") {
+      handleTaskSubmit();
+    } else {
+      setButtonState("confirm");
+      const id = setTimeout(() => setButtonState("add"), 5000); // Revert after 5 seconds
+      setTimeoutId(id); // Save timeout ID for cleanup
+    }
+  }}
+  disabled={uploading}
+  className={`w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+    uploading && "cursor-not-allowed"
+  }`}
+  style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+>
+  {uploading ? "Uploading..." : buttonState === "add" ? "Add Task" : "Confirm?"}
+</button>
+
       </div>
 
       {/* Task History */}

@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showInstructionModal, setShowInstructionModal] = useState(false);
   const navigate = useNavigate();
 
   // Fetch tasks from Firestore (each task is now a global/shared object)
@@ -113,7 +114,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-black text-white p-6 pb-24 relative">
       {/* Header */}
       <h1
         className="uppercase text-4xl font-extrabold mb-6 text-center"
@@ -141,44 +142,48 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Task List */}
-      <div
-        className="max-w-lg mx-auto bg-gray-800 p-6 rounded-lg border border-gray-700"
-        style={{ boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)" }}
-      >
-        <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
-          {season} Tasks
-        </h2>
-        {season === "Season 1" ? (
-          <p className="text-green-500 text-center font-semibold">
-            Season Completed
-          </p>
-        ) : filteredTasks.length === 0 ? (
-          <p className="text-gray-500 text-center">No tasks available.</p>
-        ) : (
-          filteredTasks.map((task) => (
-            <div
-              key={task.id}
-              onClick={() => handleTaskClick(task)}
-              className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
-                task.completed ? "opacity-50 cursor-default" : ""
-              }`}
-              style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-            >
-              <h3 className="text-xl font-bold text-gray-200">
-                {task.heading}
-              </h3>
-              <p className="text-gray-300">{task.text}</p>
-              {task.completed && (
-              <span className="text-gray-500 mt-2 inline-block">
-             Completed {task.completedByUsername && `by ${task.completedByUsername}`}
-             </span>
-             )}
 
-            </div>
-          ))
+{/* Task List */}
+<div
+  className="max-w-lg mx-auto bg-gray-800 p-6 rounded-lg border border-gray-700"
+  style={{
+    boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+  }}
+>
+  <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
+    {season} Tasks
+  </h2>
+  {season === "Season 1" ? (
+    <p className="text-green-500 text-center font-semibold">
+      Season Completed
+    </p>
+  ) : filteredTasks.length === 0 ? (
+    <p className="text-gray-500 text-center">No tasks available.</p>
+  ) : (
+    filteredTasks.map((task) => (
+      <div
+        key={task.id}
+        onClick={() => handleTaskClick(task)}
+        className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
+          task.completed ? "opacity-50 cursor-default" : ""
+        }`}
+        style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+      >
+        <h3 className="text-xl font-bold text-gray-200">
+          {task.heading}
+        </h3>
+        <p className="text-gray-300">{task.text}</p>
+        {task.completed && (
+          <span className="text-gray-500 mt-2 inline-block">
+            Completed{" "}
+            {task.completedByUsername && `by ${task.completedByUsername}`}
+          </span>
         )}
       </div>
+    ))
+  )}
+</div>
+
 
       {/* Verification Modal */}
       {selectedTask && (
@@ -229,8 +234,19 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Instruction Button (Positioned Above Help and Logout) */}
+      <div className="flex justify-center mt-8">
+        <button
+          onClick={() => setShowInstructionModal(true)}
+          className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+        >
+          Instruction
+        </button>
+      </div>
+      
       {/* Logout and Help Buttons */}
-      <div className="flex justify-center mt-12 space-x-4">
+      <div className="fixed inset-x-0 bottom-0 flex justify-center p-4 space-x-4 bg-gray-800 bg-opacity-90">
         <button
           onClick={() => setShowLogoutModal(true)}
           className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
@@ -246,6 +262,8 @@ const Dashboard = () => {
           Help
         </button>
       </div>
+
+
 
       {/* Logout Modal */}
       {showLogoutModal && (
@@ -326,6 +344,32 @@ const Dashboard = () => {
     </div>
   </div>
 )}
+
+      {/* Instruction Modal */}
+      {showInstructionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+          <div
+            className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto"
+            style={{
+              boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+            }}
+          >
+            <h3 className="text-xl font-bold mb-4">Game Instructions</h3>
+            <p className="text-gray-400 mb-6">
+              Welcome to the task challenge! Your objective is clear: complete as many tasks as possible. The first participant to achieve the highest number of completed tasks wins the game. Focus on accuracy, efficiency, and strategic planning. Enjoy the challenge and play your best!
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowInstructionModal(false)}
+                className="bg-gray-800 hover:bg-gray-700 text-gray-400 py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+                style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
