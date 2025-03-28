@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { auth, db } from "../firebase";
-import { collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -48,7 +54,12 @@ const AdminPanel = () => {
 
   // Add New Task
   const handleTaskSubmit = useCallback(async () => {
-    if (!taskHeading || !taskText || !taskCode || !selectedSeason) {
+    if (
+      !taskHeading.trim() ||
+      !taskText.trim() ||
+      !taskCode.trim() ||
+      !selectedSeason
+    ) {
       toast.warn("All fields are required!");
       return;
     }
@@ -95,7 +106,6 @@ const AdminPanel = () => {
       >
         Admin Panel
       </h1>
-
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Task Creation Form */}
@@ -142,24 +152,27 @@ const AdminPanel = () => {
           <option value="Season 2">Season 2</option>
         </select>
         <button
-  onClick={() => {
-    if (buttonState === "confirm") {
-      handleTaskSubmit();
-    } else {
-      setButtonState("confirm");
-      const id = setTimeout(() => setButtonState("add"), 5000); // Revert after 5 seconds
-      setTimeoutId(id); // Save timeout ID for cleanup
-    }
-  }}
-  disabled={uploading}
-  className={`w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
-    uploading && "cursor-not-allowed"
-  }`}
-  style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
->
-  {uploading ? "Uploading..." : buttonState === "add" ? "Add Task" : "Confirm?"}
-</button>
-
+          onClick={() => {
+            if (buttonState === "confirm") {
+              handleTaskSubmit();
+            } else {
+              setButtonState("confirm");
+              const id = setTimeout(() => setButtonState("add"), 5000); // Revert after 5 seconds
+              setTimeoutId(id);
+            }
+          }}
+          disabled={uploading}
+          className={`w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+            uploading && "cursor-not-allowed"
+          }`}
+          style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+        >
+          {uploading
+            ? "Uploading..."
+            : buttonState === "add"
+            ? "Add Task"
+            : "Confirm?"}
+        </button>
       </div>
 
       {/* Task History */}
@@ -182,9 +195,7 @@ const AdminPanel = () => {
               className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 ${
                 task.status === "new" ? "" : "opacity-50"
               }`}
-              style={{
-                boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)",
-              }}
+              style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
             >
               <h3 className="text-xl font-bold text-gray-200">
                 {task.heading}
@@ -196,9 +207,7 @@ const AdminPanel = () => {
               <button
                 onClick={() => handleDeleteTask(task.id)}
                 className="mt-2 bg-gray-800 py-1 px-4 rounded text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 text-sm"
-                style={{
-                  boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)",
-                }}
+                style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
               >
                 Delete Task
               </button>

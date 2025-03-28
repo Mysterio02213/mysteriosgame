@@ -154,9 +154,10 @@ const Dashboard = () => {
     {season} Tasks
   </h2>
   {season === "Season 1" ? (
-    <p className="text-green-500 text-center font-semibold">
-      Season Completed
-    </p>
+    <div className="text-center">
+      <p className="text-green-500 font-semibold">Season Completed</p>
+      <p className="text-[#b8860b] font-semibold">@binte.syedd (Winner)</p>
+    </div>
   ) : filteredTasks.length === 0 ? (
     <p className="text-gray-500 text-center">No tasks available.</p>
   ) : (
@@ -183,6 +184,7 @@ const Dashboard = () => {
     ))
   )}
 </div>
+
 
 
       {/* Verification Modal */}

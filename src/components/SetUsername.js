@@ -63,34 +63,37 @@ const SetUsername = ({ setHasUsername }) => {
   }
 
   return (
-<div className="flex justify-center items-center min-h-screen bg-black">
-  <div className="w-full max-w-sm md:max-w-md lg:max-w-lg bg-gray-800 text-white p-6 rounded-lg border border-gray-700">
-    <h2 className="text-2xl font-bold mb-6 text-center text-gray-400">
-      Set Your Username
-    </h2>
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-      <div>
-        <label className="block text-gray-400">Username</label>
-        <input
-          type="text"
-          className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
+    <div className="flex justify-center items-center min-h-screen bg-black">
+      <div className="w-full max-w-sm md:max-w-md lg:max-w-lg bg-gray-800 text-white p-6 rounded-lg border border-gray-700">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-400">
+          Set Your Username
+        </h2>
+        <p className="text-sm text-gray-400 mb-4 text-center">
+          Choose a username that's easy to identify, like your Instagram handle or something professional.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          <div>
+            <label className="block text-gray-400">Username</label>
+            <input
+              type="text"
+              className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          >
+            Save Username
+          </button>
+        </form>
       </div>
-      <button
-        type="submit"
-        className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-      >
-        Save Username
-      </button>
-    </form>
-  </div>
-</div>
-
+    </div>
   );
+  
 };
 
 export default SetUsername;
