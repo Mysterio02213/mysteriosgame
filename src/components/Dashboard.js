@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
+  const [username, setUsername] = useState("");
   const navigate = useNavigate();
 
   // Fetch tasks from Firestore (each task is now a global/shared object)
@@ -46,6 +47,24 @@ const Dashboard = () => {
     });
     return () => unsubscribe();
   }, [fetchTasks, navigate]);
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        const fetchedUsername = userDoc.exists() ? userDoc.data().username : "Unknown User";
+        setUsername(fetchedUsername);
+        console.log("Fetched username:", fetchedUsername); // Debug log
+      } catch (error) {
+        console.error("Failed to fetch username:", error);
+      }
+    };
+  
+    if (auth.currentUser) {
+      fetchUsername();
+    }
+  }, []);
+  
 
   // Tasks for the current season
   const filteredTasks = tasks.filter((task) => task.season === season);
@@ -114,7 +133,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 pb-24 relative">
+    <div className="min-h-screen bg-black text-white p-20 pb-24 relative">
+
       {/* Header */}
       <h1
         className="uppercase text-4xl font-extrabold mb-6 text-center"
@@ -123,6 +143,13 @@ const Dashboard = () => {
         Dashboard
       </h1>
       <ToastContainer position="top-right" autoClose={3000} />
+
+{/* Heading Bar at the Top */}
+<div className="fixed inset-x-0 top-0 flex justify-start items-center px-4 py-3 bg-gray-800 bg-opacity-90">
+  <h1 className="dashboard-heading text-xl sm:text-2xl md:text-3xl text-white font-extrabold">
+    Hi! {username}
+  </h1>
+</div>
 
       {/* Season Tabs */}
       <div className="flex justify-center space-x-4 mb-6">
