@@ -63,44 +63,40 @@ const Dashboard = () => {
     }
 
     const isCodeCorrect =
-      verificationCode.trim().toLowerCase() ===
-      selectedTask.verificationCode.trim().toLowerCase();
-
-    if (isCodeCorrect) {
-      try {
-        // Update the task as completed—for example, add completed, completedBy and a timestamp
-        const taskDocRef = doc(db, "tasks", selectedTask.id);
-        await setDoc(
-          taskDocRef,
-          {
-            completed: true,
-            completedBy: auth.currentUser.uid,
-            completedAt: new Date().toISOString(), // optionally use serverTimestamp() if desired
-          },
-          { merge: true }
-        );
-        toast.success("Task verified and completed successfully!");
-        setSelectedTask(null);
-        // Re-fetch tasks to update local state
-        await fetchTasks();
-
-        // Check if this was the last task in the season
-        const seasonTasks = tasks.filter((t) => t.season === season);
-        const remainingTasks = seasonTasks.filter((t) => !t.completed);
-        if (seasonTasks.length > 0 && remainingTasks.length === 0) {
-          toast.success(
-            `Congratulations ${
-              auth.currentUser.email || auth.currentUser.uid
-            }! You completed the last task and won the game!`
-          );
-        }
-      } catch (error) {
-        toast.error("Failed to verify the task. Please try again.");
-        console.error("Error verifying task:", error);
-      }
-    } else {
-      toast.error("Incorrect code. Please try again.");
+    verificationCode.trim().toLowerCase() ===
+    selectedTask.verificationCode.trim().toLowerCase();
+  
+  if (isCodeCorrect) {
+    try {
+      // Fetch the username of the current user
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      const username = userDoc.exists() ? userDoc.data().username : "Unknown User";
+  
+      // Update the task as completed—for example, add completed, completedBy, completedByUsername, and timestamp
+      const taskDocRef = doc(db, "tasks", selectedTask.id);
+      await setDoc(
+        taskDocRef,
+        {
+          completed: true,
+          completedBy: auth.currentUser.uid,
+          completedByUsername: username, // Add the username here
+          completedAt: new Date().toISOString(), // optionally use serverTimestamp() if desired
+        },
+        { merge: true }
+      );
+  
+      toast.success("Task verified and completed successfully!");
+      setSelectedTask(null);
+      // Re-fetch tasks to update local state
+      await fetchTasks();
+    } catch (error) {
+      toast.error("Failed to verify the task. Please try again.");
+      console.error("Error verifying task:", error);
     }
+  } else {
+    toast.error("Incorrect code. Please try again.");
+  }
+  
   }, [selectedTask, verificationCode, season, tasks, fetchTasks]);
 
   if (loading) {
@@ -174,10 +170,11 @@ const Dashboard = () => {
               </h3>
               <p className="text-gray-300">{task.text}</p>
               {task.completed && (
-                <span className="text-gray-500 mt-2 inline-block">
-                  Completed {task.completedBy && `by ${task.completedBy}`}
-                </span>
-              )}
+              <span className="text-gray-500 mt-2 inline-block">
+             Completed {task.completedByUsername && `by ${task.completedByUsername}`}
+             </span>
+             )}
+
             </div>
           ))
         )}
