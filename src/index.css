@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #000000; /* Black */
+  --bg-secondary: #121212; /* Dark Gray */
+  --text-primary: #ffffff; /* White */
+  --border-color: #333333;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Poppins', sans-serif;
+}
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 6px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: block; /* Ensures it's treated as a block for alignment */
+}
+
+@keyframes spin {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+      opacity: 1;
+  }
+  50% {
+      opacity: 0.5;
+  }
+}
+
+/* Center Alignment Fix */
+.text-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Aligns child elements (circle + text) properly */
+}
