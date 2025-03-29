@@ -18,6 +18,10 @@ const Dashboard = () => {
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [verifyDisabled, setVerifyDisabled] = useState(false);
+
+
 
   // Fetch tasks from Firestore (each task is now a global/shared object)
   const fetchTasks = useCallback(async () => {
@@ -33,6 +37,31 @@ const Dashboard = () => {
       console.error("Error fetching tasks:", error);
     }
   }, []);
+
+  // Fetch Leaderboard Data
+  useEffect(() => {
+    const fetchLeaderboardData = async () => {
+      try {
+        const adminUsernames = ["Mysterio", "TestAdmin"]; // List of admin usernames
+  
+        const userSnapshot = await getDocs(collection(db, "users"));
+        const leaderboard = userSnapshot.docs
+          .map((doc) => ({
+            username: doc.data().username || "Unknown User",
+            completedTasks: doc.data().completedTasks || 0,
+          }))
+          .filter((user) => !adminUsernames.includes(user.username)) // Exclude admins dynamically
+          .sort((a, b) => b.completedTasks - a.completedTasks); // Sort by completedTasks (descending order)
+  
+        setLeaderboardData(leaderboard);
+      } catch (error) {
+        console.error("Failed to fetch leaderboard data:", error);
+      }
+    };
+  
+    fetchLeaderboardData();
+  }, []);
+  
 
   // Listen for auth changes and fetch tasks
   useEffect(() => {
@@ -81,43 +110,70 @@ const Dashboard = () => {
       toast.warn("Please enter the verification code.");
       return;
     }
-
+  
     const isCodeCorrect =
-    verificationCode.trim().toLowerCase() ===
-    selectedTask.verificationCode.trim().toLowerCase();
+      verificationCode.trim().toLowerCase() ===
+      selectedTask.verificationCode.trim().toLowerCase();
   
-  if (isCodeCorrect) {
-    try {
-      // Fetch the username of the current user
-      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-      const username = userDoc.exists() ? userDoc.data().username : "Unknown User";
+    if (isCodeCorrect) {
+      try {
+        setVerifyDisabled(true); // Disable the button immediately
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        const currentTaskCount = userDoc.exists()
+          ? userDoc.data().completedTasks || 0
+          : 0;
   
-      // Update the task as completed—for example, add completed, completedBy, completedByUsername, and timestamp
-      const taskDocRef = doc(db, "tasks", selectedTask.id);
-      await setDoc(
-        taskDocRef,
-        {
-          completed: true,
-          completedBy: auth.currentUser.uid,
-          completedByUsername: username, // Add the username here
-          completedAt: new Date().toISOString(), // optionally use serverTimestamp() if desired
-        },
-        { merge: true }
-      );
+        // Update user task count
+        await setDoc(
+          userDocRef,
+          { completedTasks: currentTaskCount + 1 },
+          { merge: true }
+        );
   
-      toast.success("Task verified and completed successfully!");
-      setSelectedTask(null);
-      // Re-fetch tasks to update local state
-      await fetchTasks();
-    } catch (error) {
-      toast.error("Failed to verify the task. Please try again.");
-      console.error("Error verifying task:", error);
+        // Mark task as completed
+        const taskDocRef = doc(db, "tasks", selectedTask.id);
+        await setDoc(
+          taskDocRef,
+          {
+            completed: true,
+            completedBy: auth.currentUser.uid,
+            completedByUsername: userDoc.data().username || "Unknown User",
+            completedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+  
+        toast.success("Task Verified! Closing Now..."); // Inform the user
+        setTimeout(() => {
+          setSelectedTask(null); // Close the modal after a delay
+        }, 2000); // 2-second delay before closing
+  
+        await fetchTasks();
+  
+        // Refresh leaderboard data
+        const adminUsernames = ["Mysterio", "TestAdmin"]; // Exclude admins
+        const userSnapshot = await getDocs(collection(db, "users"));
+        const leaderboard = userSnapshot.docs
+          .map((doc) => ({
+            username: doc.data().username || "Unknown User",
+            completedTasks: doc.data().completedTasks || 0,
+          }))
+          .filter((user) => !adminUsernames.includes(user.username)) // Exclude admins
+          .sort((a, b) => b.completedTasks - a.completedTasks); // Sort by tasks completed
+        setLeaderboardData(leaderboard);
+      } catch (error) {
+        console.error("Error verifying task:", error);
+        toast.error("Failed to verify the task. Please try again.");
+        setVerifyDisabled(false); // Re-enable button if an error occurs
+      } finally {
+        setVerifyDisabled(false); // Re-enable button after the process completes
+      }
+    } else {
+      toast.error("Incorrect code. Please try again.");
     }
-  } else {
-    toast.error("Incorrect code. Please try again.");
-  }
+  }, [selectedTask, verificationCode, fetchTasks]);
   
-  }, [selectedTask, verificationCode, season, tasks, fetchTasks]);
 
   if (loading) {
     return (
@@ -133,7 +189,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-20 pb-24 relative">
+    <div className="min-h-screen bg-black text-white p-4 sm:p-8 md:p-20 pb-24 relative pt-28 sm:pt-24 md:pt-20">
+
 
       {/* Header */}
       <h1
@@ -145,11 +202,20 @@ const Dashboard = () => {
       <ToastContainer position="top-right" autoClose={3000} />
 
 {/* Heading Bar at the Top */}
-<div className="fixed inset-x-0 top-0 flex justify-start items-center px-4 py-3 bg-gray-800 bg-opacity-90">
-  <h1 className="dashboard-heading text-xl sm:text-2xl md:text-3xl text-white font-extrabold">
+<div className="fixed inset-x-0 top-0 flex flex-col sm:flex-row items-center px-4 py-3 bg-gray-800 bg-opacity-90 z-50">
+  {/* Hi! {username} */}
+  <h1 className="text-lg sm:text-xl md:text-2xl text-white font-extrabold mb-2 sm:mb-0 sm:mr-auto">
     Hi! {username}
   </h1>
+
+  {/* MYSTERIO'S GAME */}
+  <h1 className="text-lg sm:text-xl md:text-3xl text-white font-bold tracking-widest uppercase text-center sm:text-left">
+    MYSTERIO'S GAME
+  </h1>
 </div>
+
+
+
 
       {/* Season Tabs */}
       <div className="flex justify-center space-x-4 mb-6">
@@ -197,9 +263,7 @@ const Dashboard = () => {
         }`}
         style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
       >
-        <h3 className="text-xl font-bold text-gray-200">
-          {task.heading}
-        </h3>
+        <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
         <p className="text-gray-300">{task.text}</p>
         {task.completed && (
           <span className="text-gray-500 mt-2 inline-block">
@@ -212,10 +276,44 @@ const Dashboard = () => {
   )}
 </div>
 
+{/* Leaderboard Section as a Separate Card */}
+<div className="max-w-lg mx-auto bg-gray-800 p-6 mt-8 rounded-lg border border-gray-700">
+  <h2 className="text-center text-xl font-bold text-gray-300 mb-4">Leaderboard</h2>
+  {leaderboardData.length === 0 ? (
+    <p className="text-gray-500 text-center">No leaderboard data available.</p>
+  ) : (
+    <table className="w-full text-gray-300 border-collapse">
+      <thead>
+        <tr>
+          <th className="py-2 px-4 border-b border-gray-500 text-left w-2/3">
+            User
+          </th>
+          <th className="py-2 px-4 border-b border-gray-500 text-right w-1/3">
+            Tasks Completed
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {leaderboardData.map((user, index) => (
+          <tr key={index}>
+            <td className="py-2 px-4 border-b border-gray-500 text-left w-2/3">
+              {user.username}
+            </td>
+            <td className="py-2 px-4 border-b border-gray-500 text-right w-1/3">
+              {user.completedTasks}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+</div>
 
 
-      {/* Verification Modal */}
-      {selectedTask && (
+
+
+{/* Verification Modal */}
+{selectedTask && (
   <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
     <div
       className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto"
@@ -233,21 +331,28 @@ const Dashboard = () => {
       />
       <button
         onClick={handleVerifyTask}
-        className="w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2"
+        className={`w-full py-2 px-4 rounded-lg ${
+          verifyDisabled
+            ? "bg-gray-500 cursor-not-allowed"
+            : "bg-gray-700 hover:bg-gray-600"
+        } text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2`}
         style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+        disabled={verifyDisabled} // Disable button when pressed
       >
-        Verify
+        {verifyDisabled ? "Verifying..." : "Verify"} {/* Dynamic text */}
       </button>
       <button
         onClick={() => setSelectedTask(null)}
         className="w-full py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2"
         style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+        disabled={verifyDisabled} // Optional: disable Cancel while verifying
       >
         Cancel
       </button>
     </div>
   </div>
 )}
+
 
 
       {/* Admin Panel Button */}
@@ -374,31 +479,59 @@ const Dashboard = () => {
   </div>
 )}
 
-      {/* Instruction Modal */}
-      {showInstructionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
-          <div
-            className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto"
-            style={{
-              boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
-            }}
-          >
-            <h3 className="text-xl font-bold mb-4">Game Instructions</h3>
-            <p className="text-gray-400 mb-6">
-              Welcome to the task challenge! Your objective is clear: complete as many tasks as possible. The first participant to achieve the highest number of completed tasks wins the game. Focus on accuracy, efficiency, and strategic planning. Enjoy the challenge and play your best!
-            </p>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowInstructionModal(false)}
-                className="bg-gray-800 hover:bg-gray-700 text-gray-400 py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-                style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+{/* Instruction Modal */}
+{showInstructionModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+    <div
+      className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto"
+      style={{
+        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+      }}
+    >
+      {/* Modal Header */}
+      <h3 className="text-xl font-bold mb-4 text-gray-300 text-center">
+        Game Instructions
+      </h3>
+
+      {/* Scrollable Content */}
+      <div className="max-h-80 overflow-y-auto px-2">
+        <p className="text-gray-400 text-sm leading-relaxed">
+          <strong className="text-white">Mysterio's Game - Instruction Manual</strong>  
+          <br /><br />
+          <strong className="text-gray-300">Introduction:</strong>  
+          Welcome to <strong>Mysterio's Game</strong>, a task-based competition where players complete challenges to earn points. The player who completes the most tasks by the end of the season wins. If a cash prize is available, it will be awarded to the winner.  
+          <br /><br />
+          <strong className="text-gray-300">How to Play:</strong>
+          <ol className="list-decimal ml-4 space-y-2">
+            <li><strong>Accessing the Game:</strong> Open the game and enter to start playing.</li>
+            <li><strong>Completing Tasks:</strong> View tasks on your dashboard and submit proof after completion. Admin will review and approve/reject submissions.</li>
+            <li><strong>Winning the Game:</strong> The player who completes the most tasks wins. If a cash prize is available, the winner gets it.</li>
+            <li><strong>Seasons & Reset:</strong> Tasks reset at the start of each season. Compete in new seasons for fresh rewards.</li>
+            <li><strong>Entry Fees & Payments:</strong> Some seasons require an entry fee. Payments can be made via <strong>JazzCash, EasyPaisa</strong>, or other available options.</li>
+          </ol>
+          <br />
+          <strong className="text-gray-300">Rules & Fair Play:</strong>  
+          <ul className="list-disc ml-4 space-y-1">
+            <li>All submissions must be genuine. Cheating results in disqualification.</li>
+            <li>Admin decisions on task approvals are final.</li>
+            <li>Cash prizes (if applicable) will only be awarded to eligible winners.</li>
+          </ul>
+        </p>
+      </div>
+
+      {/* Modal Footer */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={() => setShowInstructionModal(false)}
+          className="bg-gray-800 hover:bg-gray-700 text-gray-400 py-2 px-4 rounded-lg transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
     </div>
   );
