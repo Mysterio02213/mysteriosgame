@@ -368,36 +368,30 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Instruction Button (Positioned Above Help and Logout) */}
-      <div className="flex justify-center mt-8">
-        <button
-          onClick={() => setShowInstructionModal(true)}
-          className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-        >
-          Instruction
-        </button>
-      </div>
-      
-      {/* Logout and Help Buttons */}
-      <div className="fixed inset-x-0 bottom-0 flex justify-center p-4 space-x-4 bg-gray-800 bg-opacity-90">
-        <button
-          onClick={() => setShowLogoutModal(true)}
-          className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-        >
-          Logout
-        </button>
-        <button
-          onClick={() => setShowHelpModal(true)}
-          className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-        >
-          Help
-        </button>
-      </div>
-
-
+{/* Logout, Help, and Instruction Buttons */}
+<div className="fixed inset-x-0 bottom-0 flex justify-center p-4 space-x-4 bg-gray-800 bg-opacity-90">
+  <button
+    onClick={() => setShowLogoutModal(true)}
+    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+    style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+  >
+    Logout
+  </button>
+  <button
+    onClick={() => setShowHelpModal(true)}
+    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+    style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+  >
+    Help
+  </button>
+  <button
+    onClick={() => setShowInstructionModal(true)}
+    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+    style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+  >
+    Instruction
+  </button>
+</div>
 
       {/* Logout Modal */}
       {showLogoutModal && (
@@ -493,31 +487,35 @@ const Dashboard = () => {
         Game Instructions
       </h3>
 
-      {/* Scrollable Content */}
-      <div className="max-h-80 overflow-y-auto px-2">
-        <p className="text-gray-400 text-sm leading-relaxed">
-          <strong className="text-white">Mysterio's Game - Instruction Manual</strong>  
-          <br /><br />
-          <strong className="text-gray-300">Introduction:</strong>  
-          Welcome to <strong>Mysterio's Game</strong>, a task-based competition where players complete challenges to earn points. The player who completes the most tasks by the end of the season wins. If a cash prize is available, it will be awarded to the winner.  
-          <br /><br />
-          <strong className="text-gray-300">How to Play:</strong>
-          <ol className="list-decimal ml-4 space-y-2">
-            <li><strong>Accessing the Game:</strong> Open the game and enter to start playing.</li>
-            <li><strong>Completing Tasks:</strong> View tasks on your dashboard and submit proof after completion. Admin will review and approve/reject submissions.</li>
-            <li><strong>Winning the Game:</strong> The player who completes the most tasks wins. If a cash prize is available, the winner gets it.</li>
-            <li><strong>Seasons & Reset:</strong> Tasks reset at the start of each season. Compete in new seasons for fresh rewards.</li>
-            <li><strong>Entry Fees & Payments:</strong> Some seasons require an entry fee. Payments can be made via <strong>JazzCash, EasyPaisa</strong>, or other available options.</li>
-          </ol>
-          <br />
-          <strong className="text-gray-300">Rules & Fair Play:</strong>  
-          <ul className="list-disc ml-4 space-y-1">
-            <li>All submissions must be genuine. Cheating results in disqualification.</li>
-            <li>Admin decisions on task approvals are final.</li>
-            <li>Cash prizes (if applicable) will only be awarded to eligible winners.</li>
-          </ul>
-        </p>
-      </div>
+{/* Scrollable Content */}
+<div className="max-h-80 overflow-y-auto px-2">
+  <p className="text-gray-400 text-sm leading-relaxed">
+    <strong className="text-white">Mysterio's Game - Instruction Manual</strong>  
+    <br /><br />
+    <strong className="text-gray-300">Important Reminder:</strong>  
+    For the best experience, <strong>Refresh Your Page</strong> frequently to see real-time updates and changes. This ensures that you don’t miss newly added tasks or other important updates during the game.  
+    <br /><br />
+    <strong className="text-gray-300">Introduction:</strong>  
+    Welcome to <strong>Mysterio's Game</strong>, a task-based competition where players complete challenges to earn points. The player who completes the most tasks by the end of the season wins. If a cash prize is available, it will be awarded to the winner.  
+    <br /><br />
+    <strong className="text-gray-300">How to Play:</strong>
+    <ol className="list-decimal ml-4 space-y-2">
+      <li><strong>Accessing the Game:</strong> Open the game and enter to start playing.</li>
+      <li><strong>Completing Tasks:</strong> View tasks on your dashboard and submit proof after completion. Admin will review and approve/reject submissions.</li>
+      <li><strong>Winning the Game:</strong> The player who completes the most tasks wins. If a cash prize is available, the winner gets it.</li>
+      <li><strong>Seasons & Reset:</strong> Tasks reset at the start of each season. Compete in new seasons for fresh rewards.</li>
+      <li><strong>Entry Fees & Payments:</strong> Some seasons require an entry fee. Payments can be made via <strong>JazzCash, EasyPaisa</strong>, or other available options.</li>
+    </ol>
+    <br />
+    <strong className="text-gray-300">Rules & Fair Play:</strong>  
+    <ul className="list-disc ml-4 space-y-1">
+      <li>All submissions must be genuine. Cheating results in disqualification.</li>
+      <li>Admin decisions on task approvals are final.</li>
+      <li>Cash prizes (if applicable) will only be awarded to eligible winners.</li>
+    </ul>
+  </p>
+</div>
+
 
       {/* Modal Footer */}
       <div className="flex justify-center mt-6">
