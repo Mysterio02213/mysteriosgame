@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; 
+import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -20,14 +20,8 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 // Enable Persistent Login
-const enableAuthPersistence = async () => {
-  try {
-    await setPersistence(auth, browserLocalPersistence); // Keeps the user logged in across browser sessions
-    console.log("Auth persistence enabled");
-  } catch (error) {
-    console.error("Error enabling auth persistence:", error);
-  }
-};
-enableAuthPersistence();
+setPersistence(auth, browserLocalPersistence)
+  .then(() => console.log("✅ Auth persistence enabled"))
+  .catch((error) => console.error("⚠️ Error enabling auth persistence:", error));
 
-export { auth, db, storage };
+export { auth, db, storage, onAuthStateChanged };

@@ -13,7 +13,9 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -25,13 +27,20 @@ const Login = () => {
         navigate("/set-username");
       }
     } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        setError("Account does not exist. Redirecting to Sign Up...");
-        setTimeout(() => navigate("/signup"), 2000);
-      } else if (error.code === "auth/wrong-password") {
-        setError("Incorrect credentials. Please try again.");
-      } else {
-        setError("Login failed. Please check your credentials.");
+      console.error("Login Error:", error);
+      switch (error.code) {
+        case "auth/user-not-found":
+          setError("Account does not exist. Redirecting to Sign Up...");
+          setTimeout(() => navigate("/signup"), 2000);
+          break;
+        case "auth/wrong-password":
+          setError("Incorrect password. Please try again.");
+          break;
+        case "auth/invalid-email":
+          setError("Invalid email format.");
+          break;
+        default:
+          setError("Login failed. Please check your credentials.");
       }
     } finally {
       setLoading(false);
@@ -39,20 +48,21 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-black text-white">
+    <div className="flex justify-center items-center min-h-screen bg-black p-4">
+      {/* Show Loading Animation Only When Logging In */}
       {loading ? (
         <div className="text-center flex flex-col items-center">
-          <div className="loader mb-4"></div>
+          <div className="loader mb-4 w-10 h-10 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
           <p className="text-gray-400 font-medium text-lg animate-pulse">
             Logging In...
           </p>
         </div>
       ) : (
+        // Show Login Form When Not Loading
         <div
           className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-gray-800 text-white p-8 rounded-lg border border-gray-700"
           style={{
-            boxShadow:
-              "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)",
+            boxShadow: "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)",
           }}
         >
           <h2
@@ -62,9 +72,7 @@ const Login = () => {
             Login
           </h2>
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             <div>
               <label className="block text-gray-400">Email</label>
               <input
@@ -97,10 +105,7 @@ const Login = () => {
           </form>
           <p className="mt-10 text-gray-400 text-center">
             Don't have an account?{" "}
-            <a
-              href="/signup"
-              className="text-white underline hover:text-gray-300"
-            >
+            <a href="/signup" className="text-white underline hover:text-gray-300">
               Sign Up
             </a>
           </p>
@@ -108,7 +113,6 @@ const Login = () => {
       )}
     </div>
   );
-  
 };
 
 export default Login;
