@@ -111,9 +111,12 @@ const Dashboard = () => {
       return;
     }
   
+    // Normalize inputs for comparison: remove punctuation and compare in lowercase
+    const normalizeCode = (code) =>
+      code.trim().toLowerCase().replace(/[^a-z0-9]/g, ""); // Keeps only alphanumeric characters
+  
     const isCodeCorrect =
-      verificationCode.trim().toLowerCase() ===
-      selectedTask.verificationCode.trim().toLowerCase();
+      normalizeCode(verificationCode) === normalizeCode(selectedTask.verificationCode);
   
     if (isCodeCorrect) {
       try {
@@ -173,6 +176,7 @@ const Dashboard = () => {
       toast.error("Incorrect code. Please try again.");
     }
   }, [selectedTask, verificationCode, fetchTasks]);
+  
   
 
   if (loading) {
@@ -321,8 +325,11 @@ const Dashboard = () => {
         boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
       }}
     >
-      <h3 className="text-xl font-bold mb-4">{selectedTask.heading}</h3>
-      <p className="text-gray-400 mb-4">Enter the verification code:</p>
+<h3 className="text-xl font-bold mb-1 mt-[-12px]">{selectedTask.heading}</h3>
+<p className="text-gray-300 mb-4">{selectedTask.text}</p>
+<p className="text-gray-400 mb-2">Enter the verification code:</p>
+
+
       <input
         type="text"
         className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
@@ -336,7 +343,7 @@ const Dashboard = () => {
             ? "bg-gray-500 cursor-not-allowed"
             : "bg-gray-700 hover:bg-gray-600"
         } text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2`}
-        style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+        style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.6)" }}
         disabled={verifyDisabled} // Disable button when pressed
       >
         {verifyDisabled ? "Verifying..." : "Verify"} {/* Dynamic text */}
