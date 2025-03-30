@@ -30,11 +30,13 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Fetch the user's document to check if a username exists
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists() && userDoc.data().username) {
-        navigate("/dashboard");
+        // Username exists, rely on App.js to handle redirection
+        console.log("User has a username. Login successful.");
       } else {
-        navigate("/set-username");
+        console.log("User does not have a username. Redirecting to set username.");
       }
     } catch (error) {
       console.error("Login Error:", error);
@@ -125,7 +127,7 @@ const Login = () => {
       {/* Heading Bar at the Top */}
       {!loading && (
         <div className="fixed inset-x-0 top-0 flex items-center justify-center px-4 py-3 bg-gray-800 bg-opacity-90 z-50">
-          <h1 className="text-lg sm:text-xl md:text-3xl text-white font-bold tracking-widest uppercase text-center">
+          <h1 className="text-lg sm:text-xl md:text-3xl text-white font-extrabold tracking-widest uppercase text-center">
             MYSTERIO'S GAME
           </h1>
         </div>

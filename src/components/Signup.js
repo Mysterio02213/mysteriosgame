@@ -21,30 +21,21 @@ const Signup = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log("User created:", user.uid);
+
       const userDocRef = doc(db, "users", user.uid);
 
-      // First, check if the user document exists
-      let userDoc = await getDoc(userDocRef);
+      // Check if the user document exists
+      const userDoc = await getDoc(userDocRef);
       console.log("User document exists:", userDoc.exists());
 
       // If the document doesn't exist, create it with a placeholder for the username
       if (!userDoc.exists()) {
         console.log("Creating new user document with placeholder username...");
         await setDoc(userDocRef, { email: user.email, username: null });
-        userDoc = await getDoc(userDocRef); // Fetch again to get the updated data
       }
 
-      // Now, check if the username exists
-      const username = userDoc.data().username;
-      console.log("Username found:", username);
-
-      if (username) {
-        console.log("Redirecting to dashboard...");
-        navigate("/dashboard");
-      } else {
-        console.log("Redirecting to set username...");
-        navigate("/set-username");
-      }
+      // Let App.js handle redirection based on global state
+      console.log("Signup successful. Relying on App.js for redirection.");
     } catch (error) {
       console.error("Signup error:", error.code, error.message);
       if (error.code === "auth/email-already-in-use") {
@@ -55,6 +46,7 @@ const Signup = () => {
       } else {
         setError("Signup failed. Please try again.");
       }
+    } finally {
       setLoading(false);
     }
   };
@@ -117,7 +109,7 @@ const Signup = () => {
 
       {!loading && (
         <div className="fixed inset-x-0 top-0 flex items-center justify-center px-4 py-3 bg-gray-800 bg-opacity-90 z-50">
-          <h1 className="w-full text-lg sm:text-xl md:text-3xl text-white font-bold tracking-widest uppercase text-center">
+          <h1 className="w-full text-lg sm:text-xl md:text-3xl text-white font-extrabold tracking-widest uppercase text-center">
             MYSTERIO'S GAME
           </h1>
         </div>

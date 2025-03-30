@@ -96,6 +96,31 @@ const Dashboard = () => {
   }, []);
   
 
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (!auth.currentUser) {
+        console.error("No authenticated user found.");
+        navigate("/login");
+        return;
+      }
+      try {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        const fetchedUsername = userDoc.exists() ? userDoc.data().username : null;
+  
+        if (!fetchedUsername) {
+          navigate("/set-username"); // Redirect to SetUsername page if username is missing
+        } else {
+          setUsername(fetchedUsername);
+        }
+      } catch (error) {
+        console.error("Failed to fetch username:", error);
+      }
+    };
+  
+    checkUsername();
+  }, [navigate]);
+  
+
   // Tasks for the current season
   const filteredTasks = tasks.filter((task) => task.season === season);
 
@@ -190,7 +215,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 sm:p-8 md:p-20 pb-24 relative pt-28 sm:pt-24 md:pt-20">
+    <div className="min-h-screen bg-black text-white p-2 sm:p-8 md:p-20 relative pt-28 sm:pt-24 md:pt-20 pb-0">
 
 
       {/* Header */}
@@ -264,22 +289,37 @@ const Dashboard = () => {
           {/* Sidebar Buttons */}
           <button
             onClick={() => setShowInstructionModal(true)}
-            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+              isSidebarOpen
+          ? "bg-gray-700 hover:bg-gray-600 text-white"
+          : "bg-gray-500 text-gray-400 cursor-not-allowed"
+            }`}
             style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+            disabled={!isSidebarOpen} // Disable when sidebar is closed
           >
             Instruction
           </button>
           <button
             onClick={() => setShowHelpModal(true)}
-            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+              isSidebarOpen
+          ? "bg-gray-700 hover:bg-gray-600 text-white"
+          : "bg-gray-500 text-gray-400 cursor-not-allowed"
+            }`}
             style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+            disabled={!isSidebarOpen} // Disable when sidebar is closed
           >
             Help
           </button>
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+              isSidebarOpen
+          ? "bg-gray-700 hover:bg-gray-600 text-white"
+          : "bg-gray-500 text-gray-400 cursor-not-allowed"
+            }`}
             style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+            disabled={!isSidebarOpen} // Disable when sidebar is closed
           >
             Logout
           </button>
@@ -515,7 +555,7 @@ const Dashboard = () => {
           className="bg-gray-800 hover:bg-gray-700 text-gray-400 py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
           style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
         >
-          Cancel
+          Close
         </button>
       </div>
     </div>
@@ -566,7 +606,7 @@ const Dashboard = () => {
 </div>
 
 
-      {/* Modal Footer */}
+      {/*Instruction Modal Footer */}
       <div className="flex justify-center mt-6">
         <button
           onClick={() => setShowInstructionModal(false)}
@@ -580,7 +620,11 @@ const Dashboard = () => {
   </div>
 )}
 
-    </div>
+   {/* Footer */}
+   <footer className="text-center text-gray-500 mt-6">
+      © 2025 Mysterio's Game. All rights reserved.
+    </footer>
+  </div>
   );
 };
 

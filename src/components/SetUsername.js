@@ -12,7 +12,7 @@ const SetUsername = ({ setHasUsername }) => {
 
   const validateUsername = (username) => {
     const regex = /^[a-zA-Z0-9_]{3,15}$/;
-    const blacklist = ["admin", "test", "username", "inappropriate","kuta","kuti","bkl","terimkc","lora","muther"];
+    const blacklist = ["admin", "test", "username", "inappropriate","kuta","kuti","bkl","terimkc","lora","muther","mysterio","Mysterio"];
     const filter = new Filter();
 
     const words = username.split(/[\s_]+/); // Split into words
@@ -36,7 +36,12 @@ const SetUsername = ({ setHasUsername }) => {
     try {
       const user = auth.currentUser;
       if (user) {
-        await setDoc(doc(db, "users", user.uid), { username }, { merge: true });
+        const email = user.email; // Get the user's email
+        await setDoc(
+          doc(db, "users", user.uid),
+          { username, email }, // Save both username and email
+          { merge: true }
+        );
         setHasUsername(true);
         navigate("/dashboard");
       } else {
