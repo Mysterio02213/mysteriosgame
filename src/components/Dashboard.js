@@ -20,8 +20,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [verifyDisabled, setVerifyDisabled] = useState(false);
-
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Fetch tasks from Firestore (each task is now a global/shared object)
   const fetchTasks = useCallback(async () => {
@@ -79,6 +78,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchUsername = async () => {
+      if (!auth.currentUser) {
+        console.error("No authenticated user found.");
+        return;
+      }
       try {
         const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
         const fetchedUsername = userDoc.exists() ? userDoc.data().username : "Unknown User";
@@ -88,10 +91,8 @@ const Dashboard = () => {
         console.error("Failed to fetch username:", error);
       }
     };
-  
-    if (auth.currentUser) {
-      fetchUsername();
-    }
+    
+    fetchUsername();
   }, []);
   
 
@@ -193,31 +194,100 @@ const Dashboard = () => {
 
 
       {/* Header */}
-      <h1
-        className="uppercase text-4xl font-extrabold mb-6 text-center"
-        style={{ textShadow: "0 4px 8px rgba(255,255,255,0.2)" }}
-      >
-        Dashboard
-      </h1>
-      <ToastContainer position="top-right" autoClose={3000} />
+        <h1
+          className="uppercase text-4xl font-extrabold mb-6 text-center"
+          style={{ textShadow: "0 4px 8px rgba(255,255,255,0.2)" }}
+        >
+          Dashboard
+        </h1>
+        <ToastContainer position="top-right" autoClose={3000} />
 
-{/* Heading Bar at the Top */}
-<div className="fixed inset-x-0 top-0 flex flex-col sm:flex-row items-center px-4 py-3 bg-gray-800 bg-opacity-90 z-50">
-  {/* Hi! {username} */}
-  <h1 className="text-lg sm:text-xl md:text-2xl text-white font-extrabold mb-2 sm:mb-0 sm:mr-auto">
-    Hi! {username}
-  </h1>
+        {/* Top Bar */}
+        <div
+          className={`fixed inset-x-4 top-0 bg-gray-800 bg-opacity-90 z-50 h-16 sm:h-16 shadow-lg`}
+          style={{
+            maxWidth: "calc(100% - 2rem)", // Add spacing from the edges
+            borderTopLeftRadius: "0", // Always pointed
+            borderTopRightRadius: "0", // Always pointed
+            borderBottomLeftRadius: isSidebarOpen ? "0" : "8px", // Pointed when open, rounded when closed
+            borderBottomRightRadius: isSidebarOpen ? "0" : "8px", // Pointed when open, rounded when closed
+          }}
+        >
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 h-full">
+            {/* Left Section (Hi, Username and MYSTERIO'S GAME) */}
+            <div className="flex flex-col text-left">
+          <span
+            className="text-gray-200 font-medium text-sm sm:text-base"
+            style={{
+              textShadow: "0 2px 4px rgba(0,0,0,0.6)",
+            }}
+          >
+            Hi, {username}
+          </span>
+          <h1
+            className="text-gray-200 font-extrabold tracking-wide text-lg sm:text-2xl"
+            style={{
+              textShadow: "0 2px 4px rgba(0,0,0,0.6)",
+            }}
+          >
+            MYSTERIO'S GAME
+          </h1>
+            </div>
 
-  {/* MYSTERIO'S GAME */}
-  <h1 className="text-lg sm:text-xl md:text-3xl text-white font-bold tracking-widest uppercase text-center sm:text-left">
-    MYSTERIO'S GAME
-  </h1>
-</div>
+            {/* Hamburger Button */}
+            <div className="text-right">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={`relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full focus:outline-none transition duration-200 ${
+              isSidebarOpen
+            ? "bg-gray-600 text-white"
+            : "bg-transparent text-gray-300 hover:text-gray-400"
+            }`}
+            style={{ fontSize: "1.5rem", zIndex: 50 }}
+          >
+            ☰
+          </button>
+            </div>
+          </div>
 
+          {/* Sidebar */}
+          <div
+            className={`absolute top-full left-0 w-full bg-gray-800 bg-opacity-90 shadow-xl transform ${
+          isSidebarOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+            } transition-all duration-300 ease-in-out z-40`}
+            style={{
+          borderBottomLeftRadius: "8px", // Always rounded
+          borderBottomRightRadius: "8px", // Always rounded
+            }}
+          >
+            <div className="p-4 flex flex-col space-y-4">
+          {/* Sidebar Buttons */}
+          <button
+            onClick={() => setShowInstructionModal(true)}
+            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+          >
+            Instruction
+          </button>
+          <button
+            onClick={() => setShowHelpModal(true)}
+            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+          >
+            Help
+          </button>
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+          >
+            Logout
+          </button>
+            </div>
+          </div>
+        </div>
 
-
-
-      {/* Season Tabs */}
+        {/* Season Selection */}
       <div className="flex justify-center space-x-4 mb-6">
         {["Season 1", "Season 2"].map((seasonName) => (
           <button
@@ -321,7 +391,7 @@ const Dashboard = () => {
         boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
       }}
     >
-<h3 className="text-xl font-bold mb-1 mt-[-12px]">{selectedTask.heading}</h3>
+<h3 className="text-xl font-bold mb-1 mt-[-12p]">{selectedTask.heading}</h3>
 <p className="text-gray-300 mb-4">{selectedTask.text}</p>
 <p className="text-gray-400 mb-2">Enter the verification code:</p>
 
@@ -371,30 +441,6 @@ const Dashboard = () => {
         </div>
       )}
 
-{/* Logout, Help, and Instruction Buttons */}
-<div className="fixed inset-x-0 bottom-0 flex justify-center p-4 space-x-4 bg-gray-800 bg-opacity-90">
-  <button
-    onClick={() => setShowLogoutModal(true)}
-    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-    style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-  >
-    Logout
-  </button>
-  <button
-    onClick={() => setShowHelpModal(true)}
-    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-    style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-  >
-    Help
-  </button>
-  <button
-    onClick={() => setShowInstructionModal(true)}
-    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-    style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-  >
-    Instruction
-  </button>
-</div>
 
       {/* Logout Modal */}
       {showLogoutModal && (
