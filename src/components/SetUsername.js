@@ -12,7 +12,7 @@ const SetUsername = ({ setHasUsername }) => {
 
   const validateUsername = (username) => {
     const regex = /^[a-zA-Z0-9_]{3,15}$/;
-    const blacklist = ["admin", "test", "username", "inappropriate","kuta","kuti","bkl","terimkc","lora","muther","Myserio","mysterio"];
+    const blacklist = ["admin", "test", "username", "inappropriate","kuta","kuti","bkl","terimkc","lora","muther"];
     const filter = new Filter();
 
     const words = username.split(/[\s_]+/); // Split into words

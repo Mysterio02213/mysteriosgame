@@ -111,12 +111,9 @@ const Dashboard = () => {
       return;
     }
   
-    // Normalize inputs for comparison: remove punctuation and compare in lowercase
-    const normalizeCode = (code) =>
-      code.trim().toLowerCase().replace(/[^a-z0-9]/g, ""); // Keeps only alphanumeric characters
-  
     const isCodeCorrect =
-      normalizeCode(verificationCode) === normalizeCode(selectedTask.verificationCode);
+      verificationCode.trim().toLowerCase() ===
+      selectedTask.verificationCode.trim().toLowerCase();
   
     if (isCodeCorrect) {
       try {
@@ -176,7 +173,6 @@ const Dashboard = () => {
       toast.error("Incorrect code. Please try again.");
     }
   }, [selectedTask, verificationCode, fetchTasks]);
-  
   
 
   if (loading) {
@@ -343,7 +339,7 @@ const Dashboard = () => {
             ? "bg-gray-500 cursor-not-allowed"
             : "bg-gray-700 hover:bg-gray-600"
         } text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2`}
-        style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.6)" }}
+        style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
         disabled={verifyDisabled} // Disable button when pressed
       >
         {verifyDisabled ? "Verifying..." : "Verify"} {/* Dynamic text */}
