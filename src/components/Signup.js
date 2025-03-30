@@ -1,85 +1,117 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase"; // Import Firestore
+import { doc, getDoc, setDoc } from "firebase/firestore"; // Firestore methods
 import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigate("/dashboard");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const userDocRef = doc(db, "users", user.uid);
+
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.username) {
+          navigate("/dashboard"); // Redirect if username exists
+        } else {
+          navigate("/set-username"); // Redirect if username doesn't exist
+        }
+      } else {
+        // Create user doc with email if it doesn’t exist
+        await setDoc(userDocRef, { email: user.email, username: null });
+        navigate("/set-username");
+      }
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
         setError("This email is already in use. Redirecting to Login...");
-        setTimeout(() => navigate("/login"), 2000);
+        setTimeout(() => navigate(`/login?email=${encodeURIComponent(email)}`), 2000);
       } else if (error.code === "auth/weak-password") {
         setError("Password must be at least 6 characters long.");
       } else {
         setError("Signup failed. Please try again.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-black p-4">
-      <div
-        className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-gray-800 text-white p-8 rounded-lg border border-gray-700"
-        style={{
-          boxShadow:
-            "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)",
-        }}
-      >
-        <h2
-          className="uppercase text-3xl font-bold text-center mb-6"
-          style={{ textShadow: "0 3px 6px rgba(255, 255, 255, 0.1)" }}
+      {loading ? (
+        <div className="text-center flex flex-col items-center">
+          <div className="loader mb-4 w-10 h-10 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-medium text-lg animate-pulse">
+            Signing Up...
+          </p>
+        </div>
+      ) : (
+        <div
+          className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-gray-800 text-white p-8 rounded-lg border border-gray-700"
+          style={{ boxShadow: "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)" }}
         >
-          Sign Up
-        </h2>
-        <form onSubmit={handleSignup} className="space-y-4">
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <div>
-            <label className="block text-gray-400">Email</label>
-            <input
-              type="email"
-              className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-400">Password</label>
-            <input
-              type="password"
-              className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-            style={{
-              boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)",
-            }}
-          >
+          <h2 className="uppercase text-3xl font-bold text-center mb-6" style={{ textShadow: "0 3px 6px rgba(255, 255, 255, 0.1)" }}>
             Sign Up
-          </button>
-        </form>
-        <p className="mt-10 text-gray-400 text-center">
-          Already have an account?{" "}
-          <a href="/login" className="text-white underline hover:text-gray-300">
-            Login
-          </a>
-        </p>
-      </div>
+          </h2>
+          <form onSubmit={handleSignup} className="space-y-4">
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            <div>
+              <label className="block text-gray-400">Email</label>
+              <input
+                type="email"
+                className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-400">Password</label>
+              <input
+                type="password"
+                className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+              style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+            >
+              Sign Up
+            </button>
+          </form>
+          <p className="mt-10 text-gray-400 text-center">
+            Already have an account?{" "}
+            <a href="/login" className="text-white underline hover:text-gray-300">
+              Login
+            </a>
+          </p>
+        </div>
+      )}
+
+      {/* Heading Bar at the Top */}
+      {!loading && (
+        <div className="fixed inset-x-0 top-0 flex items-center justify-center px-4 py-3 bg-gray-800 bg-opacity-90 z-50">
+          <h1 className="w-full text-lg sm:text-xl md:text-3xl text-white font-bold tracking-widest uppercase text-center">
+            MYSTERIO'S GAME
+          </h1>
+        </div>
+      )}
     </div>
   );
 };

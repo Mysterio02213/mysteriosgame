@@ -12,7 +12,7 @@ const SetUsername = ({ setHasUsername }) => {
 
   const validateUsername = (username) => {
     const regex = /^[a-zA-Z0-9_]{3,15}$/;
-    const blacklist = ["admin", "test", "username", "inappropriate","kuta","kuti","bkl","terimkc","lora","muther"];
+    const blacklist = ["admin", "test", "username", "inappropriate","kuta","kuti","bkl","terimkc","lora","muther","Myserio","mysterio"];
     const filter = new Filter();
 
     const words = username.split(/[\s_]+/); // Split into words
@@ -27,7 +27,7 @@ const SetUsername = ({ setHasUsername }) => {
     e.preventDefault();
     if (!validateUsername(username)) {
       setError(
-        "Username must be 3-15 characters, only contain letters, numbers, or underscores, and must not include inappropriate words."
+        "The username must be 3 to 15 characters long, containing only letters, numbers, or underscores. It must not include blacklisted or inappropriate words."
       );
       return;
     }

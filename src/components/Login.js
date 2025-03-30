@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +10,16 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Extract email from URL query if present (redirected from signup)
+    const params = new URLSearchParams(location.search);
+    const prefilledEmail = params.get("email");
+    if (prefilledEmail) {
+      setEmail(prefilledEmail);
+    }
+  }, [location]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -109,6 +119,15 @@ const Login = () => {
               Sign Up
             </a>
           </p>
+        </div>
+      )}
+      
+      {/* Heading Bar at the Top */}
+      {!loading && (
+        <div className="fixed inset-x-0 top-0 flex items-center justify-center px-4 py-3 bg-gray-800 bg-opacity-90 z-50">
+          <h1 className="text-lg sm:text-xl md:text-3xl text-white font-bold tracking-widest uppercase text-center">
+            MYSTERIO'S GAME
+          </h1>
         </div>
       )}
     </div>
