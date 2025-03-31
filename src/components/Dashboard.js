@@ -346,7 +346,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Season Selection */}
-<div className="flex justify-center space-x-6 mb-6 mt-8">
+<div className="flex justify-center space-x-6 mb-[-30px] mt-2">
   {["Season 1", "Season 2"].map((seasonName) => (
     <button
       key={seasonName}
@@ -389,9 +389,11 @@ const Dashboard = () => {
         filteredTasks.map((task) => (
           <div
             key={task.id}
-            onClick={() => handleTaskClick(task)}
-            className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 hover:scale-105 ${
-              task.completed ? "opacity-50 cursor-default" : ""
+            onClick={() => !task.completed && handleTaskClick(task)} // Prevent click action if completed
+            className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
+              task.completed
+                ? "opacity-45 cursor-default" // No hover or pointer for completed tasks
+                : "hover:scale-105"
             }`}
             style={{
               boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
@@ -401,12 +403,14 @@ const Dashboard = () => {
             <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
             <p className="text-gray-300">{task.text}</p>
             {task.completed && (
-              <span
-                className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded"
-                style={{ boxShadow: "0 2px 4px rgba(0,0,0,0.4)" }}
-              >
-                Completed
-              </span>
+              <div className="mt-2 text-sm text-gray-400">
+                <p>
+                  Completed by:{" "}
+                  <span className="text-gray-300 font-semibold">
+                    {task.completedByUsername || "Unknown"}
+                  </span>
+                </p>
+              </div>
             )}
           </div>
         ))
@@ -414,6 +418,7 @@ const Dashboard = () => {
     </div>
   </div>
 </div>
+
 
 {/* Leaderboard Section */}
 <div
