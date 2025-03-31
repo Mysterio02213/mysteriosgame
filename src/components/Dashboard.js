@@ -215,9 +215,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-2 sm:p-8 md:p-20 relative pt-28 sm:pt-24 md:pt-20 pb-0">
-
-
+    <div className="flex-grow p-2 sm:p-8 md:p-20 relative pt-20 sm:pt-24 md:pt-20 pb-0">
       {/* Header */}
         <h1
           className="uppercase text-4xl font-extrabold mb-6 text-center"
@@ -229,7 +227,7 @@ const Dashboard = () => {
 
         {/* Top Bar */}
         <div
-          className={`fixed inset-x-4 top-0 bg-gray-800 bg-opacity-90 z-50 h-16 sm:h-16 shadow-lg`}
+          className={`fixed inset-x-4 top-0 bg-gray-800 bg-opacity-90 z-50 h-16 sm:h-16 shadow-lg mb-6`}
           style={{
             maxWidth: "calc(100% - 2rem)", // Add spacing from the edges
             borderTopLeftRadius: "0", // Always pointed
@@ -260,75 +258,92 @@ const Dashboard = () => {
             </div>
 
             {/* Hamburger Button */}
-            <div className="text-right">
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full focus:outline-none transition duration-200 ${
-              isSidebarOpen
-            ? "bg-gray-600 text-white"
-            : "bg-transparent text-gray-300 hover:text-gray-400"
-            }`}
-            style={{ fontSize: "1.5rem", zIndex: 50 }}
-          >
-            ☰
-          </button>
-            </div>
-          </div>
+                  <div className="text-right">
+                  <button
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className={`relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full focus:outline-none transition duration-200 ${
+                    isSidebarOpen
+                  ? "bg-gray-600 text-white"
+                  : "bg-transparent text-gray-300 hover:text-gray-400"
+                  }`}
+                  style={{ fontSize: "1.5rem", zIndex: 50 }}
+                  >
+                  ☰
+                  </button>
+                  </div>
+                  </div>
 
-          {/* Sidebar */}
-          <div
-            className={`absolute top-full left-0 w-full bg-gray-800 bg-opacity-90 shadow-xl transform ${
-          isSidebarOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
-            } transition-all duration-300 ease-in-out z-40`}
-            style={{
-          borderBottomLeftRadius: "8px", // Always rounded
-          borderBottomRightRadius: "8px", // Always rounded
-            }}
-          >
-            <div className="p-4 flex flex-col space-y-4">
-          {/* Sidebar Buttons */}
-          <button
-            onClick={() => setShowInstructionModal(true)}
-            className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
-              isSidebarOpen
-          ? "bg-gray-700 hover:bg-gray-600 text-white"
-          : "bg-gray-500 text-gray-400 cursor-not-allowed"
-            }`}
-            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-            disabled={!isSidebarOpen} // Disable when sidebar is closed
-          >
-            Instruction
-          </button>
-          <button
-            onClick={() => setShowHelpModal(true)}
-            className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
-              isSidebarOpen
-          ? "bg-gray-700 hover:bg-gray-600 text-white"
-          : "bg-gray-500 text-gray-400 cursor-not-allowed"
-            }`}
-            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-            disabled={!isSidebarOpen} // Disable when sidebar is closed
-          >
-            Help
-          </button>
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
-              isSidebarOpen
-          ? "bg-gray-700 hover:bg-gray-600 text-white"
-          : "bg-gray-500 text-gray-400 cursor-not-allowed"
-            }`}
-            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-            disabled={!isSidebarOpen} // Disable when sidebar is closed
-          >
-            Logout
-          </button>
-            </div>
-          </div>
-        </div>
+                  {/* Sidebar */}
+                  <div
+                  className={`absolute top-full left-0 w-full bg-gray-800 bg-opacity-90 shadow-xl transform ${
+                  isSidebarOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+                  } transition-all duration-300 ease-in-out z-40`}
+                  style={{
+                  borderBottomLeftRadius: "8px", // Always rounded
+                  borderBottomRightRadius: "8px", // Always rounded
+                  }}
+                  >
+                  <div className="p-4 flex flex-col space-y-4">
+                  {/* Sidebar Buttons */}
+                  <button
+                  onClick={() => setShowInstructionModal(true)}
+                  className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+                    isSidebarOpen
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-500 text-gray-400 cursor-not-allowed"
+                  }`}
+                  style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+                  disabled={!isSidebarOpen} // Disable when sidebar is closed
+                  >
+                  Instruction
+                  </button>
+                  <button
+                  onClick={() => setShowHelpModal(true)}
+                  className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+                    isSidebarOpen
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-500 text-gray-400 cursor-not-allowed"
+                  }`}
+                  style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+                  disabled={!isSidebarOpen} // Disable when sidebar is closed
+                  >
+                  Help
+                  </button>
 
-        {/* Season Selection */}
-      <div className="flex justify-center space-x-4 mb-6">
+                    {/* Admin Panel Button */}
+                {isAdmin && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+                  isSidebarOpen
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-500 text-gray-400 cursor-not-allowed"
+                  }`}
+                  style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+                  disabled={!isSidebarOpen} // Disable when sidebar is closed
+                >
+                  Admin Panel
+                </button>
+                )}
+                
+                  <button
+                  onClick={() => setShowLogoutModal(true)}
+                  className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+                    isSidebarOpen
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-500 text-gray-400 cursor-not-allowed"
+                  }`}
+                  style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+                  disabled={!isSidebarOpen} // Disable when sidebar is closed
+                  >
+                  Logout
+                  </button>
+                  </div>
+                  </div>
+                </div>
+
+                {/* Season Selection */}
+      <div className="flex justify-center space-x-4 mb-[-40px] mt-6">
         {["Season 1", "Season 2"].map((seasonName) => (
           <button
             key={seasonName}
@@ -347,80 +362,79 @@ const Dashboard = () => {
 
 
 {/* Task List */}
-<div
-  className="max-w-lg mx-auto bg-gray-800 p-6 rounded-lg border border-gray-700"
-  style={{
-    boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
-  }}
->
-  <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
-    {season} Tasks
-  </h2>
-  {season === "Season 1" ? (
-    <div className="text-center">
-      <p className="text-green-500 font-semibold">Season Completed</p>
-      <p className="text-[#b8860b] font-semibold">@binte.syedd (Winner)</p>
+<div className="min-h-screen bg-black text-white flex flex-col mb-6 mt-6">
+  <div className="flex-grow p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
+    <div
+      className="max-w-lg mx-auto bg-gray-800 p-6 sm:p-8 md:p-10 mt-6 sm:mt-8 md:mt-10 mb-6 sm:mb-8 md:mb-12 rounded-lg border border-gray-700"
+      style={{
+        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+      }}
+    >
+      <h2 className="uppercase text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-400">
+        {season} Tasks
+      </h2>
+      {season === "Season 1" ? (
+        <div className="text-center">
+          <p className="text-green-500 font-semibold">Season Completed</p>
+          <p className="text-[#b8860b] font-semibold">@binte.syedd (Winner)</p>
+        </div>
+      ) : filteredTasks.length === 0 ? (
+        <p className="text-gray-500 text-center">No tasks available.</p>
+      ) : (
+        filteredTasks.map((task) => (
+          <div
+            key={task.id}
+            onClick={() => handleTaskClick(task)}
+            className={`p-4 sm:p-6 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
+              task.completed ? "opacity-50 cursor-default" : ""
+            }`}
+            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+          >
+            <h3 className="text-lg sm:text-xl font-bold text-gray-200">{task.heading}</h3>
+            <p className="text-gray-300 text-sm sm:text-base">{task.text}</p>
+            {task.completed && (
+              <span className="text-gray-500 mt-2 inline-block text-sm sm:text-base">
+                Completed {task.completedByUsername && `by ${task.completedByUsername}`}
+              </span>
+            )}
+          </div>
+        ))
+      )}
     </div>
-  ) : filteredTasks.length === 0 ? (
-    <p className="text-gray-500 text-center">No tasks available.</p>
-  ) : (
-    filteredTasks.map((task) => (
-      <div
-        key={task.id}
-        onClick={() => handleTaskClick(task)}
-        className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
-          task.completed ? "opacity-50 cursor-default" : ""
-        }`}
-        style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-      >
-        <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
-        <p className="text-gray-300">{task.text}</p>
-        {task.completed && (
-          <span className="text-gray-500 mt-2 inline-block">
-            Completed{" "}
-            {task.completedByUsername && `by ${task.completedByUsername}`}
-          </span>
-        )}
-      </div>
-    ))
-  )}
+
+    {/* Leaderboard Section */}
+    <div
+      className="max-w-lg mx-auto bg-gray-800 p-6 sm:p-8 md:p-10 mt-6 sm:mt-8 md:mt-10 mb-6 sm:mb-8 md:mb-12 rounded-lg border border-gray-700"
+      style={{
+        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+      }}
+    >
+      <h2 className="uppercase text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-400">
+        Leaderboard
+      </h2>
+      {leaderboardData.length === 0 ? (
+        <p className="text-gray-500 text-center">No leaderboard data available.</p>
+      ) : (
+        <div>
+          {leaderboardData.map((user, index) => (
+            <div
+              key={index}
+              className="p-4 sm:p-6 rounded mb-4 bg-gray-700 border border-gray-600"
+              style={{
+                boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
+              }}
+            >
+              <h3 className="text-lg sm:text-xl font-bold text-gray-200">{user.username}</h3>
+              <p className="text-gray-300 text-sm sm:text-base">
+                Tasks Completed: {user.completedTasks}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
 </div>
-
-{/* Leaderboard Section as a Separate Card */}
-<div className="max-w-lg mx-auto bg-gray-800 p-6 mt-8 rounded-lg border border-gray-700">
-  <h2 className="text-center text-xl font-bold text-gray-300 mb-4">Leaderboard</h2>
-  {leaderboardData.length === 0 ? (
-    <p className="text-gray-500 text-center">No leaderboard data available.</p>
-  ) : (
-    <table className="w-full text-gray-300 border-collapse">
-      <thead>
-        <tr>
-          <th className="py-2 px-4 border-b border-gray-500 text-left w-2/3">
-            User
-          </th>
-          <th className="py-2 px-4 border-b border-gray-500 text-right w-1/3">
-            Tasks Completed
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {leaderboardData.map((user, index) => (
-          <tr key={index}>
-            <td className="py-2 px-4 border-b border-gray-500 text-left w-2/3">
-              {user.username}
-            </td>
-            <td className="py-2 px-4 border-b border-gray-500 text-right w-1/3">
-              {user.completedTasks}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</div>
-
-
-
 
 {/* Verification Modal */}
 {selectedTask && (
@@ -465,22 +479,6 @@ const Dashboard = () => {
     </div>
   </div>
 )}
-
-
-
-      {/* Admin Panel Button */}
-      {isAdmin && (
-        <div className="text-center mt-8">
-          <button
-            onClick={() => navigate("/admin")}
-            className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-          >
-            Admin Panel
-          </button>
-        </div>
-      )}
-
 
       {/* Logout Modal */}
       {showLogoutModal && (
@@ -620,10 +618,11 @@ const Dashboard = () => {
   </div>
 )}
 
-   {/* Footer */}
-   <footer className="text-center text-gray-500 mt-6">
-      © 2025 Mysterio's Game. All rights reserved.
-    </footer>
+{/* Footer */}
+<footer className="text-center text-gray-500 mt-2 mb-[-20px] text-sm sm:text-base md:text-lg">
+  © 2025 Mysterio's Game. All rights reserved.
+</footer>
+
   </div>
   );
 };
