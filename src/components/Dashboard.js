@@ -218,8 +218,11 @@ const Dashboard = () => {
     <div className="flex-grow p-2 sm:p-8 md:p-20 relative pt-20 sm:pt-24 md:pt-20 pb-0">
       {/* Header */}
         <h1
-          className="uppercase text-4xl font-extrabold mb-6 text-center"
-          style={{ textShadow: "0 4px 8px rgba(255,255,255,0.2)" }}
+          className="uppercase text-5xl font-extrabold mb-8 text-center"
+          style={{
+            textShadow: "0 6px 12px rgba(255,255,255,0.3)", // Enhanced shadow
+            letterSpacing: "2px", // Add spacing between letters
+          }}
         >
           Dashboard
         </h1>
@@ -343,34 +346,36 @@ const Dashboard = () => {
                 </div>
 
                 {/* Season Selection */}
-      <div className="flex justify-center space-x-4 mb-[-40px] mt-6">
-        {["Season 1", "Season 2"].map((seasonName) => (
-          <button
-            key={seasonName}
-            onClick={() => setSeason(seasonName)}
-            className={`py-2 px-4 rounded-lg border border-gray-700 transition transform duration-200 hover:-translate-y-1 ${
-              season === seasonName
-                ? "bg-gray-700 text-white"
-                : "bg-gray-800 text-gray-400"
-            }`}
-            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-          >
-            {seasonName}
-          </button>
-        ))}
-      </div>
+<div className="flex justify-center space-x-6 mb-6 mt-8">
+  {["Season 1", "Season 2"].map((seasonName) => (
+    <button
+      key={seasonName}
+      onClick={() => setSeason(seasonName)}
+      className={`py-3 px-6 rounded-lg border border-gray-700 transition-transform duration-300 hover:scale-105 ${
+        season === seasonName
+          ? "bg-gray-700 text-white shadow-lg"
+          : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+      }`}
+      style={{
+        boxShadow: season === seasonName ? "0 6px 12px rgba(0,0,0,0.6)" : "0 4px 8px rgba(0,0,0,0.4)",
+      }}
+    >
+      {seasonName}
+    </button>
+  ))}
+</div>
 
 
 {/* Task List */}
 <div className="min-h-screen bg-black text-white flex flex-col mb-6 mt-6">
   <div className="flex-grow p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
     <div
-      className="max-w-lg mx-auto bg-gray-800 p-6 sm:p-8 md:p-10 mt-6 sm:mt-8 md:mt-10 mb-6 sm:mb-8 md:mb-12 rounded-lg border border-gray-700"
+      className="max-w-lg mx-auto bg-gray-800 p-8 mt-6 sm:mt-8 md:mt-4 mb- sm:mb-8 md:mb-12 rounded-lg border border-gray-700"
       style={{
         boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
       }}
     >
-      <h2 className="uppercase text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-400">
+      <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
         {season} Tasks
       </h2>
       {season === "Season 1" ? (
@@ -385,56 +390,93 @@ const Dashboard = () => {
           <div
             key={task.id}
             onClick={() => handleTaskClick(task)}
-            className={`p-4 sm:p-6 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
+            className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 hover:scale-105 ${
               task.completed ? "opacity-50 cursor-default" : ""
             }`}
-            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+            style={{
+              boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
+              position: "relative",
+            }}
           >
-            <h3 className="text-lg sm:text-xl font-bold text-gray-200">{task.heading}</h3>
-            <p className="text-gray-300 text-sm sm:text-base">{task.text}</p>
+            <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
+            <p className="text-gray-300">{task.text}</p>
             {task.completed && (
-              <span className="text-gray-500 mt-2 inline-block text-sm sm:text-base">
-                Completed {task.completedByUsername && `by ${task.completedByUsername}`}
+              <span
+                className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded"
+                style={{ boxShadow: "0 2px 4px rgba(0,0,0,0.4)" }}
+              >
+                Completed
               </span>
             )}
           </div>
         ))
       )}
     </div>
-
-    {/* Leaderboard Section */}
-    <div
-      className="max-w-lg mx-auto bg-gray-800 p-6 sm:p-8 md:p-10 mt-6 sm:mt-8 md:mt-10 mb-6 sm:mb-8 md:mb-12 rounded-lg border border-gray-700"
-      style={{
-        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
-      }}
-    >
-      <h2 className="uppercase text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-400">
-        Leaderboard
-      </h2>
-      {leaderboardData.length === 0 ? (
-        <p className="text-gray-500 text-center">No leaderboard data available.</p>
-      ) : (
-        <div>
-          {leaderboardData.map((user, index) => (
-            <div
-              key={index}
-              className="p-4 sm:p-6 rounded mb-4 bg-gray-700 border border-gray-600"
-              style={{
-                boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
-              }}
-            >
-              <h3 className="text-lg sm:text-xl font-bold text-gray-200">{user.username}</h3>
-              <p className="text-gray-300 text-sm sm:text-base">
-                Tasks Completed: {user.completedTasks}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
   </div>
 </div>
+
+{/* Leaderboard Section */}
+<div
+  className="max-w-lg mx-auto bg-gray-800 p-6 mt-6 sm:mt-8 md:mt-[-30px] mb-6 sm:mb-8 rounded-lg border border-gray-700"
+  style={{
+    boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+  }}
+>
+  <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
+    Leaderboard
+  </h2>
+  {leaderboardData.length === 0 ? (
+    <p className="text-gray-500 text-center">No leaderboard data available.</p>
+  ) : (
+    <div>
+      {leaderboardData.slice(0, 10).map((user, index) => {
+        // Determine the rank suffix
+        const rankSuffix =
+          index === 0
+            ? "st"
+            : index === 1
+            ? "nd"
+            : index === 2
+            ? "rd"
+            : "th";
+
+        // Determine the rank color
+        const rankColor =
+          index === 0
+            ? "text-yellow-400"
+            : index === 1
+            ? "text-gray-300"
+            : index === 2
+            ? "text-[#cd7f32]"
+            : "text-gray-400";
+
+        return (
+          <div
+            key={index}
+            className="p-4 rounded mb-4 bg-gray-700 border border-gray-600 flex items-center space-x-4"
+            style={{
+              boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
+            }}
+          >
+            {/* Rank Indicator */}
+            <div
+              className={`flex items-center justify-center ${rankColor} text-lg font-bold`}
+            >
+              <span>{index + 1}</span>
+              <sup className="text-sm">{rankSuffix}</sup>
+            </div>
+            {/* User Info */}
+            <div>
+              <h3 className="text-xl font-bold text-gray-200">{user.username}</h3>
+              <p className="text-gray-300">Tasks Completed: {user.completedTasks}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</div>
+
 
 {/* Verification Modal */}
 {selectedTask && (
@@ -519,13 +561,14 @@ const Dashboard = () => {
 
       {/* Help Modal */}
       {showHelpModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+  <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300">
     <div
-      className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto"
+      className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto relative"
       style={{
         boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
       }}
     >
+      {/* Close Button */}
       <h3 className="text-xl font-bold mb-4">Need Help?</h3>
       <p className="text-gray-400 mb-6">
         If you experience any issues or need further assistance, please contact our support team directly via DM on Instagram at:
@@ -543,14 +586,14 @@ const Dashboard = () => {
           onClick={() =>
             window.open("https://www.instagram.com/mysterio_notfound", "_blank")
           }
-          className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
           style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
         >
           Visit Instagram
         </button>
         <button
           onClick={() => setShowHelpModal(false)}
-          className="bg-gray-800 hover:bg-gray-700 text-gray-400 py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          className="bg-gray-800 hover:bg-gray-700 text-gray-400 py-2 px-4 rounded-lg transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
           style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
         >
           Close
@@ -618,9 +661,22 @@ const Dashboard = () => {
   </div>
 )}
 
-{/* Footer */}
-<footer className="text-center text-gray-500 mt-2 mb-[-20px] text-sm sm:text-base md:text-lg">
-  © 2025 Mysterio's Game. All rights reserved.
+   {/* Footer */}
+   <footer className="text-center text-gray-500 py-4 mt-8 border-t border-gray-700">
+  <p className="text-sm">
+    © 2025 Mysterio's Game. All rights reserved.
+  </p>
+  <div className="flex justify-center space-x-4 mt-2">
+    <a
+      href="https://www.instagram.com/mysterio_notfound"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Instagram
+    </a>
+
+  </div>
 </footer>
 
   </div>

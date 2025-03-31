@@ -10,9 +10,14 @@ const SetUsername = ({ setHasUsername }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const validateUsername = (username) => {
+  const validateUsername = (username, isAdmin) => {
+    if (isAdmin) {
+      // If the user is an admin, bypass all restrictions
+      return true;
+    }
+
     const regex = /^[a-zA-Z0-9_]{3,15}$/;
-    const blacklist = ["admin", "test", "username", "inappropriate","kuta","kuti","bkl","terimkc","lora","muther","mysterio","Mysterio"];
+    const blacklist = ["admin", "test", "username", "inappropriate", "kuta", "kuti", "bkl", "terimkc", "lora", "muther", "mysterio", "Mysterio"];
     const filter = new Filter();
 
     const words = username.split(/[\s_]+/); // Split into words
@@ -25,7 +30,11 @@ const SetUsername = ({ setHasUsername }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateUsername(username)) {
+
+    const user = auth.currentUser;
+    const isAdmin = user?.email === "admin@mysterio.com"; // Replace with your logic to identify admins
+
+    if (!validateUsername(username, isAdmin)) {
       setError(
         "The username must be 3 to 15 characters long, containing only letters, numbers, or underscores. It must not include blacklisted or inappropriate words."
       );
@@ -34,7 +43,6 @@ const SetUsername = ({ setHasUsername }) => {
 
     setLoading(true);
     try {
-      const user = auth.currentUser;
       if (user) {
         const email = user.email; // Get the user's email
         await setDoc(
