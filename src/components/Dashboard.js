@@ -333,144 +333,144 @@ const Dashboard = () => {
                 </div>
 
                 {/* Season Selection */}
-<div className="flex justify-center space-x-6 mb-[-30px] mt-2">
-  {["Season 1", "Season 2"].map((seasonName) => (
-    <button
-      key={seasonName}
-      onClick={() => setSeason(seasonName)}
-      className={`py-3 px-6 rounded-lg border border-gray-700 transition-transform duration-300 hover:scale-105 ${
-        season === seasonName
-          ? "bg-gray-700 text-white shadow-lg"
-          : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
-      }`}
-      style={{
-        boxShadow: season === seasonName ? "0 6px 12px rgba(0,0,0,0.6)" : "0 4px 8px rgba(0,0,0,0.4)",
-      }}
-    >
-      {seasonName}
-    </button>
-  ))}
-</div>
+                <div className="flex justify-center space-x-6 mb-[-30px] mt-2">
+                  {["Season 1", "Season 2"].map((seasonName) => (
+                    <button
+                      key={seasonName}
+                      onClick={() => setSeason(seasonName)}
+                      className={`py-3 px-6 rounded-lg border border-gray-700 transition-transform duration-300 hover:scale-105 ${
+                        season === seasonName
+                          ? "bg-gray-700 text-white shadow-lg"
+                          : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                      }`}
+                      style={{
+                        boxShadow: season === seasonName ? "0 6px 12px rgba(0,0,0,0.6)" : "0 4px 8px rgba(0,0,0,0.4)",
+                      }}
+                    >
+                      {seasonName}
+                    </button>
+                  ))}
+                </div>
 
 
-{/* Task List */}
-<div className="min-h-screen bg-black text-white flex flex-col mb-6 mt-6">
-  <div className="flex-grow p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
-    <div
-      className="max-w-lg mx-auto bg-gray-800 p-8 mt-6 sm:mt-8 md:mt-4 mb- sm:mb-8 md:mb-12 rounded-lg border border-gray-700"
-      style={{
-        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
-      }}
-    >
-      <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
-        {season} Tasks
-      </h2>
-      {season === "Season 1" ? (
-        <div className="text-center">
-          <p className="text-green-500 font-semibold">Season Completed</p>
-          <p className="text-[#b8860b] font-semibold">@binte.syedd (Winner)</p>
-        </div>
-      ) : filteredTasks.length === 0 ? (
-        <p className="text-gray-500 text-center">No tasks available.</p>
-      ) : (
-        filteredTasks.map((task) => (
-          <div
-            key={task.id}
-            onClick={() => !task.completed && handleTaskClick(task)} // Prevent click action if completed
-            className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
-              task.completed
-                ? "opacity-45 cursor-default" // No hover or pointer for completed tasks
-                : "hover:scale-105"
-            }`}
-            style={{
-              boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
-              position: "relative",
-            }}
-          >
-            <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
-            <p className="text-gray-300">{task.text}</p>
-            {task.completed && (
-              <div className="mt-2 text-sm text-gray-400">
-                <p>
-                  Completed by:{" "}
-                  <span className="text-gray-300 font-semibold">
-                    {task.completedByUsername || "Unknown"}
-                  </span>
-                </p>
-              </div>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  </div>
-</div>
+                {/* Task List and Leaderboard Container */}
+                <div className="min-h-screen bg-black text-white flex flex-col items-center mb-6 mt-6">
+                  {/* Task List */}
+                  <div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
+                    <div
+                      className="bg-gray-800 p-8 rounded-lg border border-gray-700"
+                      style={{
+                        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
+                        {season} Tasks
+                      </h2>
+                      {season === "Season 1" ? (
+                        <div className="text-center">
+                          <p className="text-green-500 font-semibold">Season Completed</p>
+                          <p className="text-[#b8860b] font-semibold">@binte.syedd (Winner)</p>
+                        </div>
+                      ) : filteredTasks.length === 0 ? (
+                        <p className="text-gray-500 text-center">No tasks available.</p>
+                      ) : (
+                        filteredTasks.map((task) => (
+                          <div
+                            key={task.id}
+                            onClick={() => !task.completed && handleTaskClick(task)} // Prevent click action if completed
+                            className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
+                              task.completed
+                                ? "opacity-45 cursor-default" // No hover or pointer for completed tasks
+                                : "hover:scale-105"
+                            }`}
+                            style={{
+                              boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
+                              position: "relative",
+                            }}
+                          >
+                            <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
+                            <p className="text-gray-300">{task.text}</p>
+                            {task.completed && (
+                              <div className="mt-2 text-sm text-gray-400">
+                                <p>
+                                  Completed by:{" "}
+                                  <span className="text-gray-300 font-semibold">
+                                    {task.completedByUsername || "Unknown"}
+                                  </span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Leaderboard Section */}
+                  <div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
+                    <div
+                      className="bg-gray-800 p-8 rounded-lg border border-gray-700"
+                      style={{
+                        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
+                        Leaderboard
+                      </h2>
+                      {leaderboardData.length === 0 ? (
+                        <p className="text-gray-500 text-center">No leaderboard data available.</p>
+                      ) : (
+                        leaderboardData.slice(0, 10).map((user, index) => {
+                          // Determine the rank suffix
+                          const rankSuffix =
+                            index === 0
+                              ? "st"
+                              : index === 1
+                              ? "nd"
+                              : index === 2
+                              ? "rd"
+                              : "th";
+
+                          // Determine the rank color
+                          const rankColor =
+                            index === 0
+                              ? "text-yellow-400"
+                              : index === 1
+                              ? "text-gray-300"
+                              : index === 2
+                              ? "text-[#cd7f32]"
+                              : "text-gray-400";
+
+                          return (
+                            <div
+                              key={index}
+                              className="p-4 rounded mb-4 bg-gray-700 border border-gray-600 flex items-center space-x-4"
+                              style={{
+                                boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
+                              }}
+                            >
+                              {/* Rank Indicator */}
+                              <div
+                                className={`flex items-center justify-center ${rankColor} text-lg font-bold`}
+                              >
+                                <span>{index + 1}</span>
+                                <sup className="text-sm">{rankSuffix}</sup>
+                              </div>
+                              {/* User Info */}
+                              <div>
+                                <h3 className="text-xl font-bold text-gray-200">{user.username}</h3>
+                                <p className="text-gray-300">Tasks Completed: {user.completedTasks}</p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
 
 
-{/* Leaderboard Section */}
-<div
-  className="max-w-lg mx-auto bg-gray-800 p-6 mt-6 sm:mt-8 md:mt-[-30px] mb-6 sm:mb-8 rounded-lg border border-gray-700"
-  style={{
-    boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
-  }}
->
-  <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
-    Leaderboard
-  </h2>
-  {leaderboardData.length === 0 ? (
-    <p className="text-gray-500 text-center">No leaderboard data available.</p>
-  ) : (
-    <div>
-      {leaderboardData.slice(0, 10).map((user, index) => {
-        // Determine the rank suffix
-        const rankSuffix =
-          index === 0
-            ? "st"
-            : index === 1
-            ? "nd"
-            : index === 2
-            ? "rd"
-            : "th";
-
-        // Determine the rank color
-        const rankColor =
-          index === 0
-            ? "text-yellow-400"
-            : index === 1
-            ? "text-gray-300"
-            : index === 2
-            ? "text-[#cd7f32]"
-            : "text-gray-400";
-
-        return (
-          <div
-            key={index}
-            className="p-4 rounded mb-4 bg-gray-700 border border-gray-600 flex items-center space-x-4"
-            style={{
-              boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
-            }}
-          >
-            {/* Rank Indicator */}
-            <div
-              className={`flex items-center justify-center ${rankColor} text-lg font-bold`}
-            >
-              <span>{index + 1}</span>
-              <sup className="text-sm">{rankSuffix}</sup>
-            </div>
-            {/* User Info */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-200">{user.username}</h3>
-              <p className="text-gray-300">Tasks Completed: {user.completedTasks}</p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  )}
-</div>
-
-
-{/* Verification Modal */}
+                {/* Verification Modal */}
 {selectedTask && (
   <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
     <div

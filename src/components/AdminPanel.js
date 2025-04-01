@@ -7,10 +7,12 @@ import {
   doc,
   onSnapshot,
   updateDoc,
+  getDocs,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { deleteUser } from "firebase/auth";
 
 const AdminPanel = () => {
   const [taskHeading, setTaskHeading] = useState("");
@@ -19,6 +21,8 @@ const AdminPanel = () => {
   const [selectedSeason, setSelectedSeason] = useState("");
   const [uploading, setUploading] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [confirmDelete, setConfirmDelete] = useState({}); // Track confirmation state for each user
   const navigate = useNavigate();
 
   // Authentication Check
@@ -43,6 +47,26 @@ const AdminPanel = () => {
     });
 
     return () => unsubscribe(); // Cleanup the listener on unmount
+  }, []);
+
+  // Fetch Users in Real-Time
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const userCollection = collection(db, "users"); // Assuming "users" is your Firestore collection
+        const userSnapshot = await getDocs(userCollection);
+        const userList = userSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setUsers(userList);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("Failed to fetch users.");
+      }
+    };
+
+    fetchUsers();
   }, []);
 
   // Add New Task
@@ -89,6 +113,42 @@ const AdminPanel = () => {
       console.error("Error deleting task:", error);
     }
   }, []);
+
+  // Update Username
+  const handleUpdateUsername = async (userId, newUsername) => {
+    if (!newUsername.trim()) {
+      toast.warn("Username cannot be empty!");
+      return;
+    }
+    try {
+      const userDoc = doc(db, "users", userId);
+      await updateDoc(userDoc, { username: newUsername.trim() });
+      toast.success("Username updated successfully!");
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, username: newUsername.trim() } : user
+        )
+      );
+    } catch (error) {
+      console.error("Error updating username:", error);
+      toast.error("Failed to update username.");
+    }
+  };
+
+  // Delete User
+  const handleDeleteUser = async (userId) => {
+    try {
+      // Delete from Firestore only
+      const userDoc = doc(db, "users", userId);
+      await deleteDoc(userDoc);
+
+      toast.success("User deleted successfully!");
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center">
@@ -153,6 +213,71 @@ const AdminPanel = () => {
         >
           {uploading ? "Uploading..." : "Add Task"}
         </button>
+      </div>
+
+      {/* User Management Card */}
+      <div
+        className="w-full max-w-lg bg-gray-800 p-6 rounded-lg border border-gray-700 mt-6"
+        style={{
+          boxShadow:
+            "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)",
+        }}
+      >
+        <h2 className="uppercase text-2xl font-bold mb-6 text-center">
+          User Management
+        </h2>
+        {users.filter((user) => user.email !== "admin@mysterio.com").length === 0 ? (
+          <p className="text-center">No users available.</p>
+        ) : (
+          users
+            .filter((user) => user.email !== "admin@mysterio.com") // Exclude admin user
+            .map((user) => (
+              <div
+                key={user.id}
+                className="p-4 rounded mb-4 bg-gray-700 border border-gray-600"
+                style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+              >
+                <h3 className="text-xl font-bold text-gray-200">
+                  {user.username || "No Username"}
+                </h3>
+                <p className="text-gray-300">{user.email}</p>
+                <div className="flex items-center mt-2">
+                  <input
+                    type="text"
+                    className="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+                    placeholder="New username..."
+                    onChange={(e) =>
+                      setUsers((prevUsers) =>
+                        prevUsers.map((u) =>
+                          u.id === user.id ? { ...u, newUsername: e.target.value } : u
+                        )
+                      )
+                    }
+                  />
+                  <button
+                    onClick={() =>
+                      handleUpdateUsername(user.id, user.newUsername || "")
+                    }
+                    className="ml-2 bg-gray-800 py-1 px-4 rounded text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 text-sm"
+                    style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+                  >
+                    Update
+                  </button>
+                </div>
+                <button
+                  onClick={() =>
+                    confirmDelete[user.id]
+                      ? handleDeleteUser(user.id)
+                      : setConfirmDelete((prev) => ({ ...prev, [user.id]: true }))
+                  }
+                  className="mt-2 py-1 px-4 rounded text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 text-sm bg-gray-800"
+                  style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+                >
+                  {confirmDelete[user.id] ? "Confirm Delete" : "Delete User"}
+                </button>
+              </div>
+            ))
+        )}
       </div>
 
       {/* Task History */}
