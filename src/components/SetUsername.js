@@ -64,13 +64,8 @@ const SetUsername = ({ setHasUsername }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-black text-white">
-        <div className="text-center flex flex-col items-center">
-          <div className="loader mb-4"></div>
-          <p className="text-gray-400 font-medium text-lg animate-pulse">
-            Saving Your Username...
-          </p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen bg-black">
+        <div className="loader" style={{ width: "100px", height: "100px" }}></div>
       </div>
     );
   }
@@ -104,6 +99,24 @@ const SetUsername = ({ setHasUsername }) => {
           </button>
         </form>
       </div>
+
+         {/* Footer */}
+   <footer className="text-center text-gray-500 py-4 mt-8 border-t border-gray-700">
+  <p className="text-sm">
+    © 2025 Mysterio's Game. All rights reserved.
+  </p>
+  <div className="flex justify-center space-x-4 mt-2">
+    <a
+      href="https://www.instagram.com/mysterio_notfound"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Instagram
+    </a>
+
+  </div>
+</footer>
     </div>
   );
   

@@ -203,13 +203,8 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-black text-white">
-        <div className="text-center flex flex-col items-center">
-          <div className="loader mb-4"></div>
-          <p className="text-gray-400 font-medium text-lg animate-pulse">
-            Loading Tasks...
-          </p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen bg-black">
+        <div className="loader" style={{ width: "100px", height: "100px" }}></div>
       </div>
     );
   }
