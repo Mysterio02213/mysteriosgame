@@ -2,10 +2,11 @@ import React, { useEffect, useState, useCallback } from "react";
 import { auth, db } from "../firebase";
 import {
   collection,
-  getDocs,
   addDoc,
   deleteDoc,
-  doc
+  doc,
+  onSnapshot,
+  updateDoc,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -18,8 +19,6 @@ const AdminPanel = () => {
   const [selectedSeason, setSelectedSeason] = useState("");
   const [uploading, setUploading] = useState(false);
   const [tasks, setTasks] = useState([]);
-  const [buttonState, setButtonState] = useState("add"); // "add" or "confirm"
-  const [timeoutId, setTimeoutId] = useState(null);
   const navigate = useNavigate();
 
   // Authentication Check
@@ -33,23 +32,17 @@ const AdminPanel = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Fetch Tasks
+  // Fetch Tasks in Real-Time
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const taskSnapshot = await getDocs(collection(db, "tasks"));
-        const taskList = taskSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setTasks(taskList);
-      } catch (error) {
-        toast.error("Error fetching tasks. Please try again.");
-        console.error("Error fetching tasks:", error);
-      }
-    };
+    const unsubscribe = onSnapshot(collection(db, "tasks"), (snapshot) => {
+      const taskList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTasks(taskList);
+    });
 
-    fetchTasks();
+    return () => unsubscribe(); // Cleanup the listener on unmount
   }, []);
 
   // Add New Task
@@ -70,7 +63,7 @@ const AdminPanel = () => {
         text: taskText.trim(),
         verificationCode: taskCode.trim(),
         season: selectedSeason,
-        status: "new",
+        status: "active", // Change "new" to "active"
         timestamp: new Date(),
       });
       toast.success("Task added successfully!");
@@ -90,7 +83,6 @@ const AdminPanel = () => {
   const handleDeleteTask = useCallback(async (taskId) => {
     try {
       await deleteDoc(doc(db, "tasks", taskId));
-      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
       toast.success("Task deleted successfully!");
     } catch (error) {
       toast.error("Failed to delete the task. Please try again.");
@@ -152,26 +144,14 @@ const AdminPanel = () => {
           <option value="Season 2">Season 2</option>
         </select>
         <button
-          onClick={() => {
-            if (buttonState === "confirm") {
-              handleTaskSubmit();
-            } else {
-              setButtonState("confirm");
-              const id = setTimeout(() => setButtonState("add"), 5000); // Revert after 5 seconds
-              setTimeoutId(id);
-            }
-          }}
+          onClick={handleTaskSubmit}
           disabled={uploading}
           className={`w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
             uploading && "cursor-not-allowed"
           }`}
           style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
         >
-          {uploading
-            ? "Uploading..."
-            : buttonState === "add"
-            ? "Add Task"
-            : "Confirm?"}
+          {uploading ? "Uploading..." : "Add Task"}
         </button>
       </div>
 
@@ -193,16 +173,19 @@ const AdminPanel = () => {
             <div
               key={task.id}
               className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 ${
-                task.status === "new" ? "" : "opacity-50"
+                task.status === "active" ? "" : "opacity-50"
               }`}
               style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
             >
-              <h3 className="text-xl font-bold text-gray-200">
-                {task.heading}
-              </h3>
+              <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
               <p className="text-gray-300">{task.text}</p>
               <p className="text-sm text-gray-400">
-                Status: {task.status === "new" ? "Active" : "Completed"}
+                <strong>Verification Code:</strong>{" "}
+                {task.verificationCode || "No code provided"}
+              </p>
+              <p className="text-sm text-gray-400">
+                <strong>Status:</strong>{" "}
+                {task.status === "active" ? "Active" : "Completed"}
               </p>
               <button
                 onClick={() => handleDeleteTask(task.id)}

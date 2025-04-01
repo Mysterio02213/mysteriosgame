@@ -157,12 +157,12 @@ const Dashboard = () => {
           { merge: true }
         );
   
-        // Mark task as completed
+        // Update task status to "completed"
         const taskDocRef = doc(db, "tasks", selectedTask.id);
         await setDoc(
           taskDocRef,
           {
-            completed: true,
+            status: "completed", // Update the status field
             completedBy: auth.currentUser.uid,
             completedByUsername: userDoc.data().username || "Unknown User",
             completedAt: new Date().toISOString(),
@@ -175,19 +175,7 @@ const Dashboard = () => {
           setSelectedTask(null); // Close the modal after a delay
         }, 2000); // 2-second delay before closing
   
-        await fetchTasks();
-  
-        // Refresh leaderboard data
-        const adminUsernames = ["Mysterio", "TestAdmin"]; // Exclude admins
-        const userSnapshot = await getDocs(collection(db, "users"));
-        const leaderboard = userSnapshot.docs
-          .map((doc) => ({
-            username: doc.data().username || "Unknown User",
-            completedTasks: doc.data().completedTasks || 0,
-          }))
-          .filter((user) => !adminUsernames.includes(user.username)) // Exclude admins
-          .sort((a, b) => b.completedTasks - a.completedTasks); // Sort by tasks completed
-        setLeaderboardData(leaderboard);
+        await fetchTasks(); // Refresh tasks
       } catch (error) {
         console.error("Error verifying task:", error);
         toast.error("Failed to verify the task. Please try again.");
