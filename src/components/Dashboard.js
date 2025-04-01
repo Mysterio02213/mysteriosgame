@@ -409,7 +409,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* Leaderboard Section */}
-                  <div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
+                  <div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0 mt-4">
                     <div
                       className="bg-gray-800 p-8 rounded-lg border border-gray-700"
                       style={{
