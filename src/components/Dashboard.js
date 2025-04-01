@@ -202,8 +202,10 @@ const Dashboard = () => {
   
 
   return (
-    <div className="flex-grow p-2 sm:p-8 md:p-20 relative pt-20 sm:pt-24 md:pt-20 pb-0">
-      {/* Header */}
+    <div className="flex flex-col min-h-screen bg-black">
+      {/* Main Content */}
+      <div className="flex-grow p-2 sm:p-8 md:p-20 relative pt-20 sm:pt-24 md:pt-20 pb-0">
+        {/* Header */}
         <h1
           className="uppercase text-5xl font-extrabold mb-8 text-center"
           style={{
@@ -333,7 +335,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Season Selection */}
-                <div className="flex justify-center space-x-6 mb-[-30px] mt-2">
+                <div className="flex justify-center space-x-6 mb-[-10px] mt-2">
                   {["Season 1", "Season 2"].map((seasonName) => (
                     <button
                       key={seasonName}
@@ -672,6 +674,7 @@ const Dashboard = () => {
 </footer>
 
   </div>
+ </div>
   );
 };
 
