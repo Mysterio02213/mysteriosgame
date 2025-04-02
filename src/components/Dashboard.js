@@ -379,9 +379,9 @@ const Dashboard = () => {
                         filteredTasks.map((task) => (
                           <div
                             key={task.id}
-                            onClick={() => !task.completed && handleTaskClick(task)} // Prevent click action if completed
+                            onClick={() => task.status !== "completed" && handleTaskClick(task)} // Prevent click action if completed
                             className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
-                              task.completed
+                              task.status === "completed"
                                 ? "opacity-45 cursor-default" // No hover or pointer for completed tasks
                                 : "hover:scale-105"
                             }`}
@@ -392,7 +392,7 @@ const Dashboard = () => {
                           >
                             <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
                             <p className="text-gray-300">{task.text}</p>
-                            {task.completed && (
+                            {task.status === "completed" && (
                               <div className="mt-2 text-sm text-gray-400">
                                 <p>
                                   Completed by:{" "}

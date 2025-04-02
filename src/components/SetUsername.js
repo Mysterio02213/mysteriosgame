@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { auth, db } from "../firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Filter } from "bad-words";
 
@@ -34,6 +34,9 @@ const SetUsername = ({ setHasUsername }) => {
     const user = auth.currentUser;
     const isAdmin = user?.email === "admin@mysterio.com"; // Replace with your logic to identify admins
 
+    // Normalize the username: lowercase and trim spaces
+    const normalizedUsername = username.trim().toLowerCase();
+
     if (!validateUsername(username, isAdmin)) {
       setError(
         "The username must be 3 to 15 characters long, containing only letters, numbers, or underscores. It must not include blacklisted or inappropriate words."
@@ -43,11 +46,26 @@ const SetUsername = ({ setHasUsername }) => {
 
     setLoading(true);
     try {
+      // Check if the normalized username already exists in the database
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("normalizedUsername", "==", normalizedUsername));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        setError("This username is already taken. Please choose another one.");
+        setLoading(false);
+        return;
+      }
+
       if (user) {
         const email = user.email; // Get the user's email
         await setDoc(
           doc(db, "users", user.uid),
-          { username, email }, // Save both username and email
+          {
+            username: username.trim(), // Store the original username with its case
+            normalizedUsername, // Store the normalized (lowercase, trimmed) username for uniqueness checks
+            email,
+          },
           { merge: true }
         );
         setHasUsername(true);
