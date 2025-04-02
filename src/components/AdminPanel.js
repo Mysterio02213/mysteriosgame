@@ -28,7 +28,7 @@ const AdminPanel = () => {
   // Authentication Check
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user || user.email !== "admin@mysterio.com") {
+      if (!user || user.email !== "mysterionotmail@gmail.com") {
         toast.error("Access denied. Redirecting to Dashboard...");
         navigate("/dashboard");
       }
@@ -226,11 +226,11 @@ const AdminPanel = () => {
         <h2 className="uppercase text-2xl font-bold mb-6 text-center">
           User Management
         </h2>
-        {users.filter((user) => user.email !== "admin@mysterio.com").length === 0 ? (
+        {users.filter((user) => user.email !== "mysterionotmail@gmail.com").length === 0 ? (
           <p className="text-center">No users available.</p>
         ) : (
           users
-            .filter((user) => user.email !== "admin@mysterio.com") // Exclude admin user
+            .filter((user) => user.email !== "mysterionotmail@gmail.com") // Exclude admin user
             .map((user) => (
               <div
                 key={user.id}

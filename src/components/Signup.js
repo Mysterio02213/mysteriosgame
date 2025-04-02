@@ -1,53 +1,106 @@
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../firebase"; // Import Firestore
-import { doc, getDoc, setDoc } from "firebase/firestore"; // Firestore methods
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  fetchSignInMethodsForEmail,
+  linkWithCredential,
+} from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({ email: "", password: "" }); // Combine email and password states
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Helper function to update form data state
+  const handleInputChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  // Handle email/password signup
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    console.log("Signup initiated");
-
+  
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
       const user = userCredential.user;
-      console.log("User created:", user.uid);
-
+  
       const userDocRef = doc(db, "users", user.uid);
-
-      // Check if the user document exists
+      await setDoc(userDocRef, { email: user.email, username: null, hasPassword: "Email/Password" });
+  
+      // Fetch Firestore fields after signup
       const userDoc = await getDoc(userDocRef);
-      console.log("User document exists:", userDoc.exists());
-
-      // If the document doesn't exist, create it with a placeholder for the username
-      if (!userDoc.exists()) {
-        console.log("Creating new user document with placeholder username...");
-        await setDoc(userDocRef, { email: user.email, username: null });
+      const userData = userDoc.exists() ? userDoc.data() : { username: null, hasPassword: "Email/Password" };
+  
+      if (!userData?.username) {
+        setTimeout(() => navigate("/set-username"), 500); // Smooth transition
+      } else if (userData?.hasPassword === false) {
+        setTimeout(() => navigate("/set-password"), 500); // Smooth transition
+      } else {
+        setTimeout(() => navigate("/dashboard"), 500); // Smooth transition
       }
-
-      // Let App.js handle redirection based on global state
-      console.log("Signup successful. Relying on App.js for redirection.");
     } catch (error) {
       console.error("Signup error:", error.code, error.message);
-      if (error.code === "auth/email-already-in-use") {
-        setError("This email is already in use. Redirecting to Login...");
-        setTimeout(() => navigate(`/login?email=${encodeURIComponent(email)}`), 2000);
-      } else if (error.code === "auth/weak-password") {
-        setError("Password must be at least 6 characters long.");
-      } else {
-        setError("Signup failed. Please try again.");
-      }
+      setError(getSignupErrorMessage(error.code));
     } finally {
       setLoading(false);
+    }
+  };
+  
+  
+  
+  // Handle Google signup
+  
+  const handleGoogleSignup = async () => {
+    const provider = new GoogleAuthProvider();
+    setError("");
+    setLoading(true);
+  
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const googleUser = result.user;
+      const userDocRef = doc(db, "users", googleUser.uid);
+  
+      const signInMethods = await fetchSignInMethodsForEmail(auth, googleUser.email);
+  
+      if (signInMethods.includes("password")) {
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        if (userData?.hasPassword !== false) {
+          await setDoc(userDocRef, { hasPassword: false }, { merge: true });
+          console.log("Updated Firestore to require re-setting password for Google login.");
+        }
+        setTimeout(() => navigate("/set-password"), 500); // Redirect after validation
+      } else {
+        await setDoc(userDocRef, { email: googleUser.email, username: null, hasPassword: false });
+        setTimeout(() => navigate("/dashboard"), 500); // Redirect for new users
+      }
+    } catch (error) {
+      console.error("Google signup error:", error.code, error.message);
+      setError("Google signup failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };  
+  
+  // Error handling for email/password signup
+  const getSignupErrorMessage = (code) => {
+    switch (code) {
+      case "auth/email-already-in-use":
+        return "This email is already in use. Redirecting to Login...";
+      case "auth/weak-password":
+        return "Password must be at least 6 characters long.";
+      default:
+        return "Signup failed. Please try again.";
     }
   };
 
@@ -68,11 +121,10 @@ const Signup = () => {
 
           {/* Main Content */}
           <div className="flex-grow flex flex-col justify-center items-center p-4 mt-16">
+            {/* Email/Password Sign Up Card */}
             <div
               className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-gray-800 text-white p-8 rounded-lg border border-gray-700"
-              style={{
-                boxShadow: "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)",
-              }}
+              style={{ boxShadow: "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)" }}
             >
               <h2
                 className="uppercase text-3xl font-bold text-center mb-6"
@@ -86,9 +138,10 @@ const Signup = () => {
                   <label className="block text-gray-400">Email</label>
                   <input
                     type="email"
+                    name="email"
                     className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
@@ -96,18 +149,17 @@ const Signup = () => {
                   <label className="block text-gray-400">Password</label>
                   <input
                     type="password"
+                    name="password"
                     className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
                 <button
                   type="submit"
                   className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
-                  style={{
-                    boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)",
-                  }}
+                  style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
                 >
                   Sign Up
                 </button>
@@ -118,6 +170,29 @@ const Signup = () => {
                   Login
                 </a>
               </p>
+            </div>
+
+            {/* Divider */}
+            <div className="my-6 text-center text-gray-400 text-sm uppercase">Or</div>
+
+            {/* Sign Up Methods Card */}
+            <div
+              className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-gray-800 text-white p-6 rounded-lg border border-gray-700"
+              style={{ boxShadow: "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)" }}
+            >
+              <h3 className="text-center text-lg font-bold mb-4">Continue With</h3>
+              <button
+                onClick={handleGoogleSignup}
+                className="w-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition transform duration-200"
+                style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+              >
+                <img
+                  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                  alt="Google Logo"
+                  className="w-5 h-5 mr-2"
+                />
+                Google
+              </button>
             </div>
           </div>
 

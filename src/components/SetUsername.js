@@ -30,33 +30,43 @@ const SetUsername = ({ setHasUsername }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const user = auth.currentUser;
-    const isAdmin = user?.email === "admin@mysterio.com"; // Replace with your logic to identify admins
-
+    const isAdmin = user?.email === "mysterionotmail@gmail.com"; // Replace with your logic to identify admins
+  
     // Normalize the username: lowercase and trim spaces
     const normalizedUsername = username.trim().toLowerCase();
-
+  
     if (!validateUsername(username, isAdmin)) {
       setError(
         "The username must be 3 to 15 characters long, containing only letters, numbers, or underscores. It must not include blacklisted or inappropriate words."
       );
       return;
     }
-
+  
     setLoading(true);
     try {
       // Check if the normalized username already exists in the database
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("normalizedUsername", "==", normalizedUsername));
       const querySnapshot = await getDocs(q);
-
+  
       if (!querySnapshot.empty) {
-        setError("This username is already taken. Please choose another one.");
-        setLoading(false);
-        return;
+        let isSameUser = false;
+  
+        querySnapshot.forEach((doc) => {
+          if (doc.data().email === user?.email) {
+            isSameUser = true; // The email matches the current user
+          }
+        });
+  
+        if (!isSameUser) {
+          setError("This username is already taken by another user. Please choose another one.");
+          setLoading(false);
+          return;
+        }
       }
-
+  
       if (user) {
         const email = user.email; // Get the user's email
         await setDoc(
@@ -79,6 +89,7 @@ const SetUsername = ({ setHasUsername }) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="flex flex-col min-h-screen bg-black">

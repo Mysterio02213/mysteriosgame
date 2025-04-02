@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [verifyDisabled, setVerifyDisabled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState("Verify"); // Default button text
 
   // Fetch tasks from Firestore (each task is now a global/shared object)
   const fetchTasks = useCallback(async () => {
@@ -66,7 +67,7 @@ const Dashboard = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        setIsAdmin(user.email === "admin@mysterio.com");
+        setIsAdmin(user.email === "mysterionotmail@gmail.com");
         await fetchTasks();
         setLoading(false);
       } else {
@@ -144,6 +145,8 @@ const Dashboard = () => {
     if (isCodeCorrect) {
       try {
         setVerifyDisabled(true); // Disable the button immediately
+        setVerifyStatus("Verifying..."); // Update button text to "Verifying..."
+  
         const userDocRef = doc(db, "users", auth.currentUser.uid);
         const userDoc = await getDoc(userDocRef);
         const currentTaskCount = userDoc.exists()
@@ -170,15 +173,17 @@ const Dashboard = () => {
           { merge: true }
         );
   
-        toast.success("Task Verified! Closing Now..."); // Inform the user
+        setVerifyStatus("Verified!"); // Update button text to "Verified!"
+        toast.success("Task Verified! Closing Now...");
         setTimeout(() => {
           setSelectedTask(null); // Close the modal after a delay
-        }, 2000); // 2-second delay before closing
-  
+          setVerifyStatus("Verify"); // Reset button text
+        }, 1000); // 2-second delay before closing
         await fetchTasks(); // Refresh tasks
       } catch (error) {
         console.error("Error verifying task:", error);
         toast.error("Failed to verify the task. Please try again.");
+        setVerifyStatus("Verify"); // Reset button text on error
         setVerifyDisabled(false); // Re-enable button if an error occurs
       } finally {
         setVerifyDisabled(false); // Re-enable button after the process completes
@@ -502,7 +507,7 @@ const Dashboard = () => {
         style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
         disabled={verifyDisabled} // Disable button when pressed
       >
-        {verifyDisabled ? "Verifying..." : "Verify"} {/* Dynamic text */}
+        {verifyStatus} {/* Dynamic text */}
       </button>
       <button
         onClick={() => setSelectedTask(null)}

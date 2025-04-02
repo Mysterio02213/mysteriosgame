@@ -7,38 +7,55 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Dashboard from "./components/Dashboard";
 import SetUsername from "./components/SetUsername";
+import SetPassword from "./components/SetPassword"; // Import the SetPassword component
 import AdminPanel from "./components/AdminPanel";
 
 function App() {
   const [user, setUser] = useState(null);
   const [hasUsername, setHasUsername] = useState(false);
+  const [hasPassword, setHasPassword] = useState(false); // New state to track password status
   const [loading, setLoading] = useState(true);
 
   const auth = getAuth();
+  const [transitioning, ] = useState(false);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setLoading(true); // Start loading when auth state changes
+      setLoading(true); // Show loader during state updates
       if (currentUser) {
         setUser(currentUser);
         try {
           const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-          setHasUsername(userDoc.exists() && !!userDoc.data().username);
+          const userData = userDoc.exists() ? userDoc.data() : { username: null, hasPassword: false };
+  
+          console.log("Fetched Firestore user data:", userData); // Debug log
+  
+          setHasUsername(!!userData?.username);
+          setHasPassword(
+            userData?.hasPassword === true || userData?.hasPassword === "Email/Password"
+              ? "Email/Password"
+              : false
+          ); // Normalize `hasPassword` to "Email/Password"
         } catch (error) {
           console.error("Error fetching user data:", error);
           setHasUsername(false);
+          setHasPassword(false); // Reset states on error
         }
       } else {
         setUser(null);
         setHasUsername(false);
+        setHasPassword(false);
       }
-      setLoading(false); // Stop loading after checks are complete
+      setTimeout(() => setLoading(false), 500); // Delay for smooth UX transitions
     });
-
-    return () => unsubscribe();
+  
+    return () => unsubscribe(); // Cleanup on unmount
   }, []);
+  
+  
 
-  // Show a loading screen until the user and username checks are complete
+  // Show a loading screen until the checks are complete
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-black">
@@ -50,12 +67,16 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Redirect based on user and username state */}
+        {/* Redirect based on user, username, and password state */}
         <Route
           path="/"
           element={
             user ? (
-              hasUsername ? <Navigate to="/dashboard" /> : <Navigate to="/set-username" />
+              hasUsername ? (
+                hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
+              ) : (
+                <Navigate to="/set-username" />
+              )
             ) : (
               <Login />
             )
@@ -65,7 +86,11 @@ function App() {
           path="/login"
           element={
             user ? (
-              hasUsername ? <Navigate to="/dashboard" /> : <Navigate to="/set-username" />
+              hasUsername ? (
+                hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
+              ) : (
+                <Navigate to="/set-username" />
+              )
             ) : (
               <Login />
             )
@@ -75,7 +100,11 @@ function App() {
           path="/signup"
           element={
             user ? (
-              hasUsername ? <Navigate to="/dashboard" /> : <Navigate to="/set-username" />
+              hasUsername ? (
+                hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
+              ) : (
+                <Navigate to="/set-username" />
+              )
             ) : (
               <Signup />
             )
@@ -92,19 +121,41 @@ function App() {
           }
         />
         <Route
+path="/set-password"
+element={
+  transitioning || loading ? (
+    <div className="flex justify-center items-center min-h-screen bg-black">
+      <div className="loader" style={{ width: "100px", height: "100px" }}></div>
+    </div>
+  ) : user && hasPassword === "Email/Password" ? (
+    <Navigate to="/dashboard" /> // Redirect to dashboard if hasPassword is valid
+  ) : user && hasPassword !== "Email/Password" ? (
+    <SetPassword setHasPassword={setHasPassword} /> // Render Set Password Page
+  ) : (
+    <Navigate to="/login" /> // Fallback for missing user
+  )
+}
+/>
+
+        <Route
           path="/dashboard"
           element={
             user ? (
-              hasUsername ? <Dashboard /> : <Navigate to="/set-username" />
+              hasUsername ? (
+                hasPassword ? (
+                  <Dashboard />
+                ) : (
+                  <Navigate to="/set-password" /> // Adjusted for "false" handling
+                )
+              ) : (
+                <Navigate to="/set-username" />
+              )
             ) : (
               <Navigate to="/login" />
             )
           }
         />
-        <Route
-          path="/admin"
-          element={user ? <AdminPanel /> : <Navigate to="/login" />}
-        />
+        <Route path="/admin" element={user ? <AdminPanel /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
