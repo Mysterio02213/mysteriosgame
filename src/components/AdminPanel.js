@@ -23,6 +23,9 @@ const AdminPanel = () => {
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState({}); // Track confirmation state for each user
+  const [requirePicture, setRequirePicture] = useState(false);
+const [taskPicture, setTaskPicture] = useState(null);
+
   const navigate = useNavigate();
 
   // Authentication Check
@@ -89,19 +92,22 @@ const AdminPanel = () => {
         season: selectedSeason,
         status: "active", // Change "new" to "active"
         timestamp: new Date(),
+        pictureRequired: requirePicture, // Dynamically add this property
       });
       toast.success("Task added successfully!");
       setTaskHeading("");
       setTaskText("");
       setTaskCode("");
       setSelectedSeason("");
+      setRequirePicture(false); // Reset the state
     } catch (error) {
       toast.error("Failed to add the task. Please try again.");
       console.error("Error adding task:", error);
     } finally {
       setUploading(false);
     }
-  }, [taskHeading, taskText, taskCode, selectedSeason]);
+  }, [taskHeading, taskText, taskCode, selectedSeason, requirePicture]);  
+    
 
   // Delete Task
   const handleDeleteTask = useCallback(async (taskId) => {
@@ -160,60 +166,76 @@ const AdminPanel = () => {
       </h1>
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* Task Creation Form */}
+      {/* Updated Task Creation Form */}
       <div
-        className="w-full max-w-lg bg-gray-800 p-6 rounded-lg border border-gray-700"
-        style={{
-          boxShadow:
-            "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)",
-        }}
-      >
-        <h2 className="uppercase text-2xl font-bold mb-6 text-center">
-          Create New Task
-        </h2>
-        <input
-          type="text"
-          className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-          placeholder="Task heading..."
-          value={taskHeading}
-          onChange={(e) => setTaskHeading(e.target.value)}
-        />
-        <textarea
-          rows="4"
-          className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-          placeholder="Task description..."
-          value={taskText}
-          onChange={(e) => setTaskText(e.target.value)}
-        />
-        <input
-          type="text"
-          className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-          placeholder="Verification code..."
-          value={taskCode}
-          onChange={(e) => setTaskCode(e.target.value)}
-        />
-        <select
-          className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-          value={selectedSeason}
-          onChange={(e) => setSelectedSeason(e.target.value)}
-        >
-          <option value="" disabled>
-            Select Season
-          </option>
-          <option value="Season 1">Season 1</option>
-          <option value="Season 2">Season 2</option>
-        </select>
-        <button
-          onClick={handleTaskSubmit}
-          disabled={uploading}
-          className={`w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
-            uploading && "cursor-not-allowed"
-          }`}
-          style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
-        >
-          {uploading ? "Uploading..." : "Add Task"}
-        </button>
-      </div>
+  className="w-full max-w-lg bg-gray-800 p-6 rounded-lg border border-gray-700"
+  style={{
+    boxShadow:
+      "0 10px 20px rgba(0, 0, 0, 0.7), 0 5px 10px rgba(0, 0, 0, 0.5)",
+  }}
+>
+  <h2 className="uppercase text-2xl font-bold mb-6 text-center">
+    Create New Task
+  </h2>
+  <input
+    type="text"
+    className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+    placeholder="Task heading..."
+    value={taskHeading}
+    onChange={(e) => setTaskHeading(e.target.value)}
+  />
+  <textarea
+    rows="4"
+    className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+    placeholder="Task description..."
+    value={taskText}
+    onChange={(e) => setTaskText(e.target.value)}
+  />
+  <input
+    type="text"
+    className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+    placeholder="Verification code..."
+    value={taskCode}
+    onChange={(e) => setTaskCode(e.target.value)}
+  />
+  <select
+    className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+    value={selectedSeason}
+    onChange={(e) => setSelectedSeason(e.target.value)}
+  >
+    <option value="" disabled>
+      Select Season
+    </option>
+    <option value="Season 1">Season 1</option>
+    <option value="Season 2">Season 2</option>
+  </select>
+  
+  {/* Enable Picture Feature */}
+  <div className="flex items-center mb-4">
+    <input
+      type="checkbox"
+      id="enablePicture"
+      className="mr-2"
+      checked={requirePicture}
+      onChange={(e) => setRequirePicture(e.target.checked)}
+    />
+    <label htmlFor="enablePicture" className="text-white">
+      Require Picture
+    </label>
+  </div>
+
+  <button
+    onClick={handleTaskSubmit}
+    disabled={uploading}
+    className={`w-full py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+      uploading && "cursor-not-allowed"
+    }`}
+    style={{ boxShadow: "0 5px 10px rgba(0, 0, 0, 0.5)" }}
+  >
+    {uploading ? "Uploading..." : "Add Task"}
+  </button>
+</div>
+
 
       {/* User Management Card */}
       <div

@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { collection, getDocs, getDoc, setDoc, doc } from "firebase/firestore";
-import { auth, db } from "../firebase";
+import { collection, getDocs, getDoc, setDoc, doc, updateDoc } from "firebase/firestore"; // Added updateDoc
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Added storage methods
+import { auth, db, storage } from "../firebase"; // Added storage
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { signOut } from "firebase/auth";
 import "react-toastify/dist/ReactToastify.css";
+
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
@@ -22,6 +24,7 @@ const Dashboard = () => {
   const [verifyDisabled, setVerifyDisabled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState("Verify"); // Default button text
+
 
   // Fetch tasks from Firestore (each task is now a global/shared object)
   const fetchTasks = useCallback(async () => {
@@ -142,56 +145,95 @@ const Dashboard = () => {
       verificationCode.trim().toLowerCase() ===
       selectedTask.verificationCode.trim().toLowerCase();
   
-    if (isCodeCorrect) {
-      try {
-        setVerifyDisabled(true); // Disable the button immediately
-        setVerifyStatus("Verifying..."); // Update button text to "Verifying..."
-  
-        const userDocRef = doc(db, "users", auth.currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        const currentTaskCount = userDoc.exists()
-          ? userDoc.data().completedTasks || 0
-          : 0;
-  
-        // Update user task count
-        await setDoc(
-          userDocRef,
-          { completedTasks: currentTaskCount + 1 },
-          { merge: true }
-        );
-  
-        // Update task status to "completed"
-        const taskDocRef = doc(db, "tasks", selectedTask.id);
-        await setDoc(
-          taskDocRef,
-          {
-            status: "completed", // Update the status field
-            completedBy: auth.currentUser.uid,
-            completedByUsername: userDoc.data().username || "Unknown User",
-            completedAt: new Date().toISOString(),
-          },
-          { merge: true }
-        );
-  
-        setVerifyStatus("Verified!"); // Update button text to "Verified!"
-        toast.success("Task Verified! Closing Now...");
-        setTimeout(() => {
-          setSelectedTask(null); // Close the modal after a delay
-          setVerifyStatus("Verify"); // Reset button text
-        }, 1000); // 2-second delay before closing
-        await fetchTasks(); // Refresh tasks
-      } catch (error) {
-        console.error("Error verifying task:", error);
-        toast.error("Failed to verify the task. Please try again.");
-        setVerifyStatus("Verify"); // Reset button text on error
-        setVerifyDisabled(false); // Re-enable button if an error occurs
-      } finally {
-        setVerifyDisabled(false); // Re-enable button after the process completes
-      }
-    } else {
+    if (!isCodeCorrect) {
       toast.error("Incorrect code. Please try again.");
+      return;
+    }
+  
+    if (selectedTask.pictureRequired && !selectedTask.pictureURL) {
+      toast.error("This task requires a picture to be uploaded before submission.");
+      return;
+    }
+  
+    try {
+      setVerifyDisabled(true); // Disable the button immediately
+      setVerifyStatus("Verifying..."); // Update button text to "Verifying..."
+  
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      const currentTaskCount = userDoc.exists()
+        ? userDoc.data().completedTasks || 0
+        : 0;
+  
+      // Update user task count
+      await setDoc(
+        userDocRef,
+        { completedTasks: currentTaskCount + 1 },
+        { merge: true }
+      );
+  
+      // Update task status to "completed"
+      const taskDocRef = doc(db, "tasks", selectedTask.id);
+      await setDoc(
+        taskDocRef,
+        {
+          status: "completed", // Update the status field
+          completedBy: auth.currentUser.uid,
+          completedByUsername: userDoc.data().username || "Unknown User",
+          completedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+  
+      setVerifyStatus("Verified!"); // Update button text to "Verified!"
+      toast.success("Task Verified! Closing Now...");
+      setTimeout(() => {
+        setSelectedTask(null); // Close the modal after a delay
+        setVerifyStatus("Verify"); // Reset button text
+      }, 1000); // 1-second delay before closing
+      await fetchTasks(); // Refresh tasks
+    } catch (error) {
+      console.error("Error verifying task:", error);
+      toast.error("Failed to verify the task. Please try again.");
+      setVerifyStatus("Verify"); // Reset button text on error
+      setVerifyDisabled(false); // Re-enable button if an error occurs
+    } finally {
+      setVerifyDisabled(false); // Re-enable button after the process completes
     }
   }, [selectedTask, verificationCode, fetchTasks]);
+  
+
+  const handleAddPicture = async (taskId) => {
+    try {
+      // Open file picker
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.click();
+  
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+  
+        // Upload the file to Firebase Storage
+        const storageRef = ref(storage, `tasks/${taskId}/${file.name}`);
+        const uploadTask = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(uploadTask.ref);
+  
+        // Update the task in Firestore with the picture URL
+        await updateDoc(doc(db, "tasks", taskId), {
+          pictureURL: downloadURL,
+        });
+  
+        toast.success("Picture successfully added!");
+      };
+    } catch (error) {
+      console.error("Error adding picture:", error);
+      toast.error("Failed to add the picture. Please try again.");
+    }
+  };
+  
+  
   
 
   if (loading) {
@@ -364,54 +406,58 @@ const Dashboard = () => {
                 <div className="min-h-screen bg-black text-white flex flex-col items-center mb-6 mt-6">
                   {/* Task List */}
                   <div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
-                    <div
-                      className="bg-gray-800 p-8 rounded-lg border border-gray-700"
-                      style={{
-                        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
-                      }}
-                    >
-                      <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
-                        {season} Tasks
-                      </h2>
-                      {season === "Season 1" ? (
-                        <div className="text-center">
-                          <p className="text-green-500 font-semibold">Season Completed</p>
-                          <p className="text-[#b8860b] font-semibold">@binte.syedd (Winner)</p>
-                        </div>
-                      ) : filteredTasks.length === 0 ? (
-                        <p className="text-gray-500 text-center">No tasks available.</p>
-                      ) : (
-                        filteredTasks.map((task) => (
-                          <div
-                            key={task.id}
-                            onClick={() => task.status !== "completed" && handleTaskClick(task)} // Prevent click action if completed
-                            className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
-                              task.status === "completed"
-                                ? "opacity-45 cursor-default" // No hover or pointer for completed tasks
-                                : "hover:scale-105"
-                            }`}
-                            style={{
-                              boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
-                              position: "relative",
-                            }}
-                          >
-                            <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
-                            <p className="text-gray-300">{task.text}</p>
-                            {task.status === "completed" && (
-                              <div className="mt-2 text-sm text-gray-400">
-                                <p>
-                                  Completed by:{" "}
-                                  <span className="text-gray-300 font-semibold">
-                                    {task.completedByUsername || "Unknown"}
-                                  </span>
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
+  <div
+    className="bg-gray-800 p-8 rounded-lg border border-gray-700"
+    style={{
+      boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
+    }}
+  >
+    <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
+      {season} Tasks
+    </h2>
+    {season === "Season 1" ? (
+      <div className="text-center">
+        <p className="text-green-500 font-semibold">Season Completed</p>
+        <p className="text-[#b8860b] font-semibold">@binte.syedd (Winner)</p>
+      </div>
+    ) : filteredTasks.length === 0 ? (
+      <p className="text-gray-500 text-center">No tasks available.</p>
+    ) : (
+      filteredTasks.map((task) => (
+        <div
+          key={task.id}
+          onClick={() =>
+            task.status !== "completed" && handleTaskClick(task)
+          } // Prevent click action if completed
+          className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
+            task.status === "completed"
+              ? "opacity-45 cursor-default" // No hover or pointer for completed tasks
+              : "hover:scale-105"
+          }`}
+          style={{
+            boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
+            position: "relative",
+          }}
+        >
+          <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
+          <p className="text-gray-300">{task.text}</p>
+
+          {task.status === "completed" && (
+            <div className="mt-2 text-sm text-gray-400">
+              <p>
+                Completed by:{" "}
+                <span className="text-gray-300 font-semibold">
+                  {task.completedByUsername || "Unknown"}
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
+      ))
+    )}
+  </div>
+</div>
+
 
                   {/* Leaderboard Section */}
                   <div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0 mt-4">
@@ -476,8 +522,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-
-                {/* Verification Modal */}
+{/* Verification Modal */}
 {selectedTask && (
   <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
     <div
@@ -486,29 +531,48 @@ const Dashboard = () => {
         boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
       }}
     >
-<h3 className="text-xl font-bold mb-1 mt-[-12p]">{selectedTask.heading}</h3>
-<p className="text-gray-300 mb-4">{selectedTask.text}</p>
-<p className="text-gray-400 mb-2">Enter the verification code:</p>
+      <h3 className="text-xl font-bold mb-1 mt-[-12p]">{selectedTask.heading}</h3>
+      <p className="text-gray-300 mb-4">{selectedTask.text}</p>
 
+      {/* Add Picture Button for Tasks Requiring a Picture */}
+      {selectedTask.pictureRequired && !selectedTask.pictureURL && (
+        <div className="mt-4">
+          <button
+            className="w-full py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+            onClick={() => handleAddPicture(selectedTask.id)}
+          >
+            Add Picture
+          </button>
+        </div>
+      )}
 
-      <input
-        type="text"
-        className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-        value={verificationCode}
-        onChange={(e) => setVerificationCode(e.target.value)}
-      />
-      <button
-        onClick={handleVerifyTask}
-        className={`w-full py-2 px-4 rounded-lg ${
-          verifyDisabled
-            ? "bg-gray-500 cursor-not-allowed"
-            : "bg-gray-700 hover:bg-gray-600"
-        } text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2`}
-        style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-        disabled={verifyDisabled} // Disable button when pressed
-      >
-        {verifyStatus} {/* Dynamic text */}
-      </button>
+      {/* Verification Code Input and Verify Button for Others */}
+      {!selectedTask.pictureRequired && (
+        <>
+          <p className="text-gray-400 mb-2">Enter the verification code:</p>
+          <input
+            type="text"
+            className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+          />
+          <button
+            onClick={handleVerifyTask}
+            className={`w-full py-2 px-4 rounded-lg ${
+              verifyDisabled
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-gray-700 hover:bg-gray-600"
+            } text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2`}
+            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+            disabled={verifyDisabled} // Disable button when pressed
+          >
+            {verifyStatus} {/* Dynamic text */}
+          </button>
+        </>
+      )}
+
+      {/* Cancel Button */}
       <button
         onClick={() => setSelectedTask(null)}
         className="w-full py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2"
@@ -520,6 +584,7 @@ const Dashboard = () => {
     </div>
   </div>
 )}
+
 
       {/* Logout Modal */}
       {showLogoutModal && (
