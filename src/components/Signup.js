@@ -50,15 +50,31 @@ const sendDiscordNotification = async (message) => {
   
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, { email: user.email, username: null, hasPassword: "Email/Password" });
-  
+
+      // Format current date and time
+      const now = new Date();
+      const formattedTime = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      const formattedDate = now.toLocaleDateString("en-US");
+
       // Send notification to Discord
-      const message = `🎉 **New Account Created**\nEmail: **${user.email}**\nSignup Method: **Email/Password**`;
+      const message = `🎉 **New Account Created**
+━━━━━━━━━━━━━━━━━━━━━━━
+📧 **Email**: ${user.email}
+🔑 **Signup Method**: Email/Password
+
+📅 **Date Created**: ${formattedDate}
+🕒 **Time Created**: ${formattedTime}
+━━━━━━━━━━━━━━━━━━━━━━━`;
       sendDiscordNotification(message);
-  
+
       // Fetch Firestore fields after signup
       const userDoc = await getDoc(userDocRef);
       const userData = userDoc.exists() ? userDoc.data() : { username: null, hasPassword: "Email/Password" };
-  
+
       if (!userData?.username) {
         setTimeout(() => navigate("/set-username"), 500); // Smooth transition
       } else if (userData?.hasPassword === false) {
@@ -72,11 +88,9 @@ const sendDiscordNotification = async (message) => {
     } finally {
       setLoading(false);
     }
-  };
-  
-  // Handle Google signup
-  
-  const handleGoogleSignup = async () => {
+};
+
+const handleGoogleSignup = async () => {
     const provider = new GoogleAuthProvider();
     setError("");
     setLoading(true);
@@ -87,7 +101,16 @@ const sendDiscordNotification = async (message) => {
       const userDocRef = doc(db, "users", googleUser.uid);
   
       const signInMethods = await fetchSignInMethodsForEmail(auth, googleUser.email);
-  
+
+      // Format current date and time
+      const now = new Date();
+      const formattedTime = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      const formattedDate = now.toLocaleDateString("en-US");
+
       if (signInMethods.includes("password")) {
         const userDoc = await getDoc(userDocRef);
         const userData = userDoc.exists() ? userDoc.data() : {};
@@ -98,11 +121,18 @@ const sendDiscordNotification = async (message) => {
         setTimeout(() => navigate("/set-password"), 500); // Redirect after validation
       } else {
         await setDoc(userDocRef, { email: googleUser.email, username: null, hasPassword: false });
-  
+
         // Send notification to Discord
-        const message = `🎉 **New Account Created**\nEmail: **${googleUser.email}**\nSignup Method: **Google**`;
+        const message = `🎉 **New Account Created**
+━━━━━━━━━━━━━━━━━━━━━━━
+📧 **Email**: ${googleUser.email}
+🔑 **Signup Method**: Google
+
+📅 **Date Created**: ${formattedDate}
+🕒 **Time Created**: ${formattedTime}
+━━━━━━━━━━━━━━━━━━━━━━━`;
         sendDiscordNotification(message);
-  
+
         setTimeout(() => navigate("/dashboard"), 500); // Redirect for new users
       }
     } catch (error) {
@@ -111,8 +141,8 @@ const sendDiscordNotification = async (message) => {
     } finally {
       setLoading(false);
     }
-  };
-  
+};
+
   
   // Error handling for email/password signup
   const getSignupErrorMessage = (code) => {

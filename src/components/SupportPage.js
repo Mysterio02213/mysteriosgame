@@ -18,7 +18,6 @@ const SupportPage = ({ user }) => {
   const navigate = useNavigate();
 
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -41,7 +40,8 @@ const SupportPage = ({ user }) => {
     });
     const formattedDate = now.toLocaleDateString("en-US");
 
-    const message = `📌 **Support Request Received**
+    // First Message (Detailed Support Request for You)
+    const adminMessage = `📌 **Support Request Received**
 ━━━━━━━━━━━━━━━━━━━━━━━
 🗂 **Category**
 ${category}
@@ -50,7 +50,9 @@ ${category}
 ${heading}
 
 💬 **Problem Description**
+\`\`\`
 ${problem}
+\`\`\`
 
 📞 **Contact Information**
 ${contact}
@@ -62,11 +64,13 @@ ${formattedTime}
 ${formattedDate}
 ━━━━━━━━━━━━━━━━━━━━━━━`;
 
+
     try {
+      // Send the first message to Discord
       await fetch(DISCORD_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: message }),
+        body: JSON.stringify({ content: adminMessage }),
       });
 
       setSuccessMessage("Your support request has been sent successfully!");
@@ -81,8 +85,6 @@ ${formattedDate}
       setLoading(false);
     }
 };
-
-
 
   if (loading) {
     return (
@@ -110,6 +112,9 @@ ${formattedDate}
       <div className="flex flex-col text-left">
         <h1
           className="text-gray-200 font-extrabold tracking-wide text-lg sm:text-2xl"
+          style={{
+            textShadow: "0 2px 4px rgba(0,0,0,0.6)",
+          }}
         >
           MYSTERIO'S GAME
         </h1>

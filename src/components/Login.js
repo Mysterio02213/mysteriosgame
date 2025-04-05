@@ -47,90 +47,148 @@ const sendDiscordNotification = async (message) => {
     setError("");
     setLoading(true);
     setTransitioning(true); // Start transition state
-    
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-  
-      const userDoc = await getDoc(doc(db, "users", user.uid)); // Fetch Firestore document
-      const userData = userDoc.exists() ? userDoc.data() : null;
-  
-      console.log("User Data from Firestore:", userData); // Debug log
-  
-      // Notify Discord on successful login
-      const message = `🔑 **User Login**\nEmail: **${user.email}**\nLogin Method: **Email/Password**`;
-      sendDiscordNotification(message);
-  
-      if (!userData?.username) {
-        setTimeout(() => {
-          setTransitioning(false); // End transition state
-          navigate("/set-username");
-        }, 500); // Allow time for transition
-      } else if (userData?.hasPassword !== "Email/Password" && userData?.hasPassword !== true) {
-        setTimeout(() => {
-          setTransitioning(false); // End transition state
-          navigate("/set-password");
-        }, 500); // Allow time for transition
-      } else {
-        setTimeout(() => {
-          setTransitioning(false); // End transition state
-          navigate("/dashboard");
-        }, 500); // Allow time for transition
-      }
-    } catch (error) {
-      console.error("Login Error:", error);
-      setError("Login failed. Please check your credentials.");
-      setTransitioning(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  
 
-  // Google Login
-  const handleGoogleLogin = async () => {
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        const userDoc = await getDoc(doc(db, "users", user.uid)); // Fetch Firestore document
+        const userData = userDoc.exists() ? userDoc.data() : null;
+
+        console.log("User Data from Firestore:", userData); // Debug log
+
+        // Format current date and time
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+        const formattedDate = now.toLocaleDateString("en-US");
+
+        // Notify Discord on successful login
+        const message = `🔑 **User Login**
+━━━━━━━━━━━━━━━━━━━━━━━
+📧 **Email**: ${user.email}
+🔑 **Login Method**: Email/Password
+
+📅 **Date Logged In**: ${formattedDate}
+🕒 **Time Logged In**: ${formattedTime}
+━━━━━━━━━━━━━━━━━━━━━━━`;
+        sendDiscordNotification(message);
+
+        if (!userData?.username) {
+            setTimeout(() => {
+                setTransitioning(false); // End transition state
+                navigate("/set-username");
+            }, 500); // Allow time for transition
+        } else if (userData?.hasPassword !== "Email/Password" && userData?.hasPassword !== true) {
+            setTimeout(() => {
+                setTransitioning(false); // End transition state
+                navigate("/set-password");
+            }, 500); // Allow time for transition
+        } else {
+            setTimeout(() => {
+                setTransitioning(false); // End transition state
+                navigate("/dashboard");
+            }, 500); // Allow time for transition
+        }
+    } catch (error) {
+        console.error("Login Error:", error);
+        setError("Login failed. Please check your credentials.");
+        setTransitioning(false);
+    } finally {
+        setLoading(false);
+    }
+};
+
+
+// Google Login
+const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     setError("");
     setLoading(true);
-  
+
     try {
-      const result = await signInWithPopup(auth, provider);
-      const googleUser = result.user;
-  
-      const userDocRef = doc(db, "users", googleUser.uid);
-      const userDoc = await getDoc(userDocRef);
-  
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("Fetched Firestore Data:", userData);
-  
-        // Notify Discord on successful Google login
-        const message = `🔑 **User Login**\nEmail: **${googleUser.email}**\nLogin Method: **Google**`;
-        sendDiscordNotification(message);
-  
-        if (userData.hasPassword === "Email/Password") {
-          await setDoc(userDocRef, { hasPassword: false }, { merge: true });
-          console.log("Updated Firestore for Google login. Redirecting to set password.");
-          navigate("/set-password");
+        const result = await signInWithPopup(auth, provider);
+        const googleUser = result.user;
+
+        const userDocRef = doc(db, "users", googleUser.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        // Format current date and time
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+        const formattedDate = now.toLocaleDateString("en-US");
+
+        // Default login message to Discord
+        const loginMessage = `🔑 **User Login**
+━━━━━━━━━━━━━━━━━━━━━━━
+📧 **Email**: ${googleUser.email}
+🔑 **Login Method**: Google
+
+📅 **Date Logged In**: ${formattedDate}
+🕒 **Time Logged In**: ${formattedTime}
+━━━━━━━━━━━━━━━━━━━━━━━`;
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            console.log("Fetched Firestore Data:", userData);
+
+            // Notify Discord with the default login message
+            sendDiscordNotification(loginMessage);
+
+            if (userData.hasPassword === "Email/Password") {
+                await setDoc(userDocRef, { hasPassword: false }, { merge: true });
+                console.log("Updated Firestore for Google continuation. Redirecting to set password.");
+                navigate("/set-password");
+            } else {
+                console.log("No further steps needed. Redirecting to dashboard.");
+                navigate("/dashboard");
+            }
         } else {
-          console.log("No need to set password. Redirecting to dashboard.");
-          navigate("/dashboard");
+            // User is new and does not exist in Firestore
+            const newUserData = {
+                email: googleUser.email,
+                createdAt: new Date().toISOString(),
+                hasPassword: false, // Default for Google login
+            };
+
+            await setDoc(userDocRef, newUserData);
+            console.log("Created new Firestore document for Google user.");
+
+            // Notify Discord for new user registration
+            const newUserMessage = `🎉 **New Account Created**
+━━━━━━━━━━━━━━━━━━━━━━━
+📧 **Email**: ${googleUser.email}
+🔑 **Signup Method**: Google
+
+📅 **Date Created**: ${formattedDate}
+🕒 **Time Created**: ${formattedTime}
+━━━━━━━━━━━━━━━━━━━━━━━`;
+            sendDiscordNotification(newUserMessage);
+
+            // Notify Discord with the default login message for consistency
+            sendDiscordNotification(loginMessage);
+
+            console.log("Redirecting new Google user to dashboard.");
+            navigate("/dashboard");
         }
-      } else {
-        console.error("User document does not exist in Firestore.");
-      }
-  
-      // Ensure loading persists until the navigation completes
-      setTimeout(() => setLoading(false), 500);
+
+        // Ensure loading persists until navigation completes
+        setTimeout(() => setLoading(false), 500);
     } catch (error) {
-      console.error("Google Login Error:", error);
-      setError(error.message || "An error occurred during login.");
-      setLoading(false); // Reset loading state on error
+        console.error("Google Login Error:", error);
+        setError(error.message || "An error occurred during continuation with Google.");
+        setLoading(false); // Reset loading state on error
     }
-  };
-  
-  
+};
+
+
 
   return (
     <div className="flex flex-col min-h-screen bg-black">
