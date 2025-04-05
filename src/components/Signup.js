@@ -4,7 +4,6 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   fetchSignInMethodsForEmail,
-  linkWithCredential,
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";

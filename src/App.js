@@ -159,10 +159,12 @@ function App() {
       path="/admin"
       element={user ? <AdminPanel /> : <Navigate to="/login" />}
     />
-    <Route
-      path="/support"
-      element={user ? <SupportPage /> : <Navigate to="/login" />}
-    />
+
+<Route
+  path="/support"
+  element={<SupportPage user={user} />} // Pass the user state as a prop
+/>
+
   </Routes>
 </Router>
 

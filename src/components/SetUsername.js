@@ -142,6 +142,12 @@ const SetUsername = ({ setHasUsername }) => {
               >
                 Instagram
               </a>
+              <a
+      href="/support"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Support
+    </a>
             </div>
           </footer>
         </>

@@ -112,7 +112,6 @@ const sendDiscordNotification = async (message) => {
     
     fetchUsername();
   }, []);
-  
 
   useEffect(() => {
     const checkUsername = async () => {
@@ -274,9 +273,9 @@ const sendDiscordNotification = async (message) => {
   
 
   return (
-    <div className="flex flex-col min-h-screen bg-black">
-      {/* Main Content */}
-      <div className="flex-grow p-2 sm:p-8 md:p-20 relative pt-20 sm:pt-24 md:pt-20 pb-0">
+<div className="flex flex-col min-h-screen bg-black">
+  {/* Main Content */}
+  <div className="flex-grow relative pt-20 sm:pt-24 md:pt-20 pb-0">
         {/* Header */}
         <h1
           className="uppercase text-5xl font-extrabold mb-8 text-center"
@@ -324,16 +323,16 @@ const sendDiscordNotification = async (message) => {
             {/* Hamburger Button */}
                   <div className="text-right">
                   <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className={`relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full focus:outline-none transition duration-200 ${
-                    isSidebarOpen
-                  ? "bg-gray-600 text-white"
-                  : "bg-transparent text-gray-300 hover:text-gray-400"
-                  }`}
-                  style={{ fontSize: "1.5rem", zIndex: 50 }}
-                  >
-                  ☰
-                  </button>
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className={`relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full focus:outline-none transition duration-300 transform ${
+            isSidebarOpen
+              ? "bg-gray-600 text-white rotate-90"
+              : "bg-transparent text-gray-300 hover:text-gray-400 rotate-0"
+          }`}
+          style={{ fontSize: "1.5rem", zIndex: 50 }}
+        >
+          ☰
+        </button>
                   </div>
                   </div>
 
