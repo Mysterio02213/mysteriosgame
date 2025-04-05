@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { collection, getDocs, getDoc, setDoc, doc, updateDoc } from "firebase/firestore"; // Added updateDoc
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Added storage methods
-import { auth, db, storage } from "../firebase"; // Added storage
+import { auth, db } from "../firebase"; // Added storage
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { signOut } from "firebase/auth";
@@ -16,7 +15,6 @@ const Dashboard = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showHelpModal, setShowHelpModal] = useState(false);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
@@ -24,7 +22,23 @@ const Dashboard = () => {
   const [verifyDisabled, setVerifyDisabled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState("Verify"); // Default button text
+const [dmSent, setDmSent] = useState(false); // For enabling/disabling the Confirm button
+const [showConfirmation, setShowConfirmation] = useState(false); // For showing/hiding the confirmation modal
+const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1357973536441896960/T0Z4id95nOGJSY03mRFbm_ejZ9c6q_UR1POiSjNN4tqO0Bj_znG-_0eKa7CdT5CelxJ-"; // Replace with your actual webhook URL
 
+
+const sendDiscordNotification = async (message) => {
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: message }), // Message content for Discord
+    });
+    console.log("Notification sent to Discord.");
+  } catch (error) {
+    console.error("Failed to send notification to Discord:", error);
+  }
+};
 
   // Fetch tasks from Firestore (each task is now a global/shared object)
   const fetchTasks = useCallback(async () => {
@@ -177,7 +191,7 @@ const Dashboard = () => {
       await setDoc(
         taskDocRef,
         {
-          status: "completed", // Update the status field
+          status: "completed",
           completedBy: auth.currentUser.uid,
           completedByUsername: userDoc.data().username || "Unknown User",
           completedAt: new Date().toISOString(),
@@ -185,10 +199,14 @@ const Dashboard = () => {
         { merge: true }
       );
   
-      setVerifyStatus("Verified!"); // Update button text to "Verified!"
+      // Notify Discord about task completion
+      const message = `✅ **Task Completed**\nTask Name: **${selectedTask.heading}**\nCompleted By: **${userDoc.data().username || "Unknown User"}**`;
+      sendDiscordNotification(message);
+  
+      setVerifyStatus("Verified!");
       toast.success("Task Verified! Closing Now...");
       setTimeout(() => {
-        setSelectedTask(null); // Close the modal after a delay
+        setSelectedTask(null); // Close the modal
         setVerifyStatus("Verify"); // Reset button text
       }, 1000); // 1-second delay before closing
       await fetchTasks(); // Refresh tasks
@@ -200,40 +218,47 @@ const Dashboard = () => {
     } finally {
       setVerifyDisabled(false); // Re-enable button after the process completes
     }
-  }, [selectedTask, verificationCode, fetchTasks]);
+  }, [selectedTask, verificationCode, fetchTasks]);  
   
 
-  const handleAddPicture = async (taskId) => {
+  const handlePictureConfirmation = useCallback(async (taskId) => {
     try {
-      // Open file picker
-      const fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.accept = "image/*";
-      fileInput.click();
+      const taskDocRef = doc(db, "tasks", taskId);
+      const taskDoc = await getDoc(taskDocRef);
   
-      fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+      if (!taskDoc.exists()) {
+        toast.error("Task not found.");
+        return;
+      }
   
-        // Upload the file to Firebase Storage
-        const storageRef = ref(storage, `tasks/${taskId}/${file.name}`);
-        const uploadTask = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(uploadTask.ref);
+      const taskData = taskDoc.data(); // Retrieve task data, including heading
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      const userDoc = await getDoc(userDocRef);
   
-        // Update the task in Firestore with the picture URL
-        await updateDoc(doc(db, "tasks", taskId), {
-          pictureURL: downloadURL,
-        });
+      const username = userDoc.exists()
+        ? userDoc.data().username || "Unknown User"
+        : "Unknown User";
   
-        toast.success("Picture successfully added!");
-      };
+      // Update the task in Firestore
+      await updateDoc(taskDocRef, {
+        status: "waiting_for_approval",
+        confirmationReceived: true,
+        confirmedAt: new Date().toISOString(),
+        approvalSentBy: username,
+      });
+  
+      // Notify Discord about the approval
+      const message = `📢 **Approval Sent**\nTask Name: **${taskData.heading}**\nSent By: **${username}**`;
+      sendDiscordNotification(message);
+  
+      toast.success("Approval sent! Closing modal...");
+      setSelectedTask(null); // Close the modal
+      await fetchTasks(); // Refresh tasks
     } catch (error) {
-      console.error("Error adding picture:", error);
-      toast.error("Failed to add the picture. Please try again.");
+      console.error("Error confirming picture submission:", error);
+      toast.error("Failed to confirm picture submission. Please try again.");
     }
-  };
-  
-  
+  }, [fetchTasks]);    
   
 
   if (loading) {
@@ -337,17 +362,18 @@ const Dashboard = () => {
                   Instruction
                   </button>
                   <button
-                  onClick={() => setShowHelpModal(true)}
-                  className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
-                    isSidebarOpen
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-500 text-gray-400 cursor-not-allowed"
-                  }`}
-                  style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-                  disabled={!isSidebarOpen} // Disable when sidebar is closed
-                  >
-                  Help
-                  </button>
+  onClick={() => (window.location.href = "/support")} // Redirect to the support page
+  className={`py-2 px-4 rounded-lg transition transform duration-200 hover:-translate-y-1 active:translate-y-0 ${
+    isSidebarOpen
+      ? "bg-gray-700 hover:bg-gray-600 text-white"
+      : "bg-gray-500 text-gray-400 cursor-not-allowed"
+  }`}
+  style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+  disabled={!isSidebarOpen} // Disable when sidebar is closed
+>
+  Support
+</button>
+
 
                     {/* Admin Panel Button */}
                 {isAdmin && (
@@ -405,7 +431,7 @@ const Dashboard = () => {
                 {/* Task List and Leaderboard Container */}
                 <div className="min-h-screen bg-black text-white flex flex-col items-center mb-6 mt-6">
                   {/* Task List */}
-                  <div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
+<div className="w-full max-w-lg p-2 sm:p-8 md:p-8 relative pt-2 sm:pt-2 md:pt-8 pb-0">
   <div
     className="bg-gray-800 p-8 rounded-lg border border-gray-700"
     style={{
@@ -415,6 +441,8 @@ const Dashboard = () => {
     <h2 className="uppercase text-2xl font-bold mb-6 text-center text-gray-400">
       {season} Tasks
     </h2>
+
+    {/* Handle Season Completed */}
     {season === "Season 1" ? (
       <div className="text-center">
         <p className="text-green-500 font-semibold">Season Completed</p>
@@ -427,21 +455,25 @@ const Dashboard = () => {
         <div
           key={task.id}
           onClick={() =>
-            task.status !== "completed" && handleTaskClick(task)
-          } // Prevent click action if completed
+            task.status === "active" && handleTaskClick(task)
+          } // Prevent click for tasks not active
           className={`p-4 rounded mb-4 bg-gray-700 border border-gray-600 cursor-pointer transition-transform duration-200 ${
             task.status === "completed"
-              ? "opacity-45 cursor-default" // No hover or pointer for completed tasks
-              : "hover:scale-105"
+              ? "opacity-45 cursor-default" // Gray out completed tasks
+              : task.status === "waiting_for_approval"
+              ? "opacity-75 cursor-default" // Gray out tasks waiting for approval
+              : "hover:scale-105" // Hover effect for active tasks
           }`}
           style={{
             boxShadow: "0 4px 8px rgba(0,0,0,0.6)",
             position: "relative",
           }}
         >
+          {/* Task Heading */}
           <h3 className="text-xl font-bold text-gray-200">{task.heading}</h3>
           <p className="text-gray-300">{task.text}</p>
 
+          {/* Show Additional Information Based on Status */}
           {task.status === "completed" && (
             <div className="mt-2 text-sm text-gray-400">
               <p>
@@ -452,11 +484,21 @@ const Dashboard = () => {
               </p>
             </div>
           )}
+
+          {task.status === "waiting_for_approval" && (
+            <p className="text-sm text-gray-400 mt-2">
+              Waiting for admin approval, Sent by:{" "}
+              <span className="text-gray-300 font-semibold">
+              {task.approvalSentBy || "Unknown"}
+              </span>
+            </p>
+          )}
         </div>
       ))
     )}
   </div>
 </div>
+
 
 
                   {/* Leaderboard Section */}
@@ -524,32 +566,105 @@ const Dashboard = () => {
 
 {/* Verification Modal */}
 {selectedTask && (
-  <div className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
+  <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300">
     <div
       className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto"
       style={{
         boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
       }}
     >
-      <h3 className="text-xl font-bold mb-1 mt-[-12p]">{selectedTask.heading}</h3>
-      <p className="text-gray-300 mb-4">{selectedTask.text}</p>
+      {/* Task Heading */}
+      <h3 className="text-xl font-bold mb-4 text-gray-300 text-center">
+        {selectedTask.heading}
+      </h3>
 
-      {/* Add Picture Button for Tasks Requiring a Picture */}
-      {selectedTask.pictureRequired && !selectedTask.pictureURL && (
+      {/* Task Description */}
+      <p className="text-gray-400 mb-6">{selectedTask.text}</p>
+
+      {/* Picture Submission Workflow */}
+      {selectedTask.pictureRequired && selectedTask.status === "active" ? (
         <div className="mt-4">
+          {/* Button to Send Picture */}
           <button
-            className="w-full py-2 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition transform duration-200 hover:-translate-y-1 active:translate-y-0"
+            className="w-full py-2 px-4 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
             style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-            onClick={() => handleAddPicture(selectedTask.id)}
+            onClick={() => {
+              window.open('https://www.instagram.com/mysterio_notfound/', '_blank');
+              setDmSent(true); // Enable Confirm Button after DM is sent
+            }}
           >
-            Add Picture
+            Send Picture via Instagram DM
           </button>
-        </div>
-      )}
 
-      {/* Verification Code Input and Verify Button for Others */}
-      {!selectedTask.pictureRequired && (
-        <>
+          {/* Confirm Picture Sent */}
+          <button
+            disabled={!dmSent} // Confirm button is disabled until Send DM button is clicked
+            onClick={() => setShowConfirmation(true)} // Trigger confirmation modal
+            className={`w-full py-2 px-4 mt-2 rounded-lg ${
+              !dmSent
+                ? "bg-gray-500 text-gray-400 cursor-not-allowed"
+                : "bg-gray-700 text-white hover:bg-gray-600"
+            } transition-transform duration-200 hover:-translate-y-1 active:translate-y-0`}
+            style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+          >
+            Confirm Picture Sent
+          </button>
+
+{/* Confirmation Modal */}
+{showConfirmation && (
+  <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+    <div
+      className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-md mx-4 sm:mx-auto"
+      style={{
+        boxShadow: "0 8px 16px rgba(0, 0, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.5)",
+      }}
+    >
+      <h3 className="text-lg font-bold text-center text-gray-200 mb-4">
+        Confirm Submission
+      </h3>
+      <p className="text-gray-400 mb-6 text-center">
+        Have you sent the required picture via Instagram DM?
+      </p>
+      <div className="flex space-x-4">
+        {/* Yes Button */}
+        <button
+          onClick={() => {
+            handlePictureConfirmation(selectedTask.id); // Handle confirmation logic
+            setShowConfirmation(false); // Close modal
+          }}
+          className="w-full py-2 px-4 rounded bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.6)" }}
+        >
+          Yes, I sent it
+        </button>
+
+        {/* No Button */}
+        <button
+          onClick={() => setShowConfirmation(false)} // Close modal without action
+          className="w-full py-2 px-4 rounded bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.6)" }}
+        >
+          No, cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+        </div>
+      ) : selectedTask.status === "waiting_for_approval" ? (
+        /* Disabled Task Workflow when Waiting for Approval */
+        <p className="text-gray-400 text-center mt-4">
+          This task is waiting for approval and cannot be modified.
+        </p>
+      ) : selectedTask.status === "completed" ? (
+        /* Completed Task Workflow */
+        <p className="text-gray-400 text-center mt-4">
+          This task is completed and cannot be modified.
+        </p>
+      ) : (
+        /* Non-Picture Task Verification */
+        <div className="mt-4">
           <p className="text-gray-400 mb-2">Enter the verification code:</p>
           <input
             type="text"
@@ -559,28 +674,29 @@ const Dashboard = () => {
           />
           <button
             onClick={handleVerifyTask}
-            className={`w-full py-2 px-4 rounded-lg ${
+            className={`w-full py-2 px-4 mt-4 rounded-lg ${
               verifyDisabled
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-gray-700 hover:bg-gray-600"
-            } text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2`}
+                ? "bg-gray-500 cursor-not-allowed text-gray-400"
+                : "bg-gray-700 text-white hover:bg-gray-600"
+            } transition-transform duration-200 hover:-translate-y-1 active:translate-y-0`}
             style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
             disabled={verifyDisabled} // Disable button when pressed
           >
             {verifyStatus} {/* Dynamic text */}
           </button>
-        </>
+        </div>
       )}
 
-      {/* Cancel Button */}
-      <button
-        onClick={() => setSelectedTask(null)}
-        className="w-full py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition transform duration-200 hover:-translate-y-1 active:translate-y-0 mt-2"
-        style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-        disabled={verifyDisabled} // Optional: disable Cancel while verifying
-      >
-        Cancel
-      </button>
+      {/* Close Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={() => setSelectedTask(null)}
+          className="w-full py-2 px-4 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
+          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
+        >
+          Close
+        </button>
+      </div>
     </div>
   </div>
 )}
@@ -623,49 +739,6 @@ const Dashboard = () => {
 )}
 
 
-      {/* Help Modal */}
-      {showHelpModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-300">
-    <div
-      className="bg-gray-800 text-white p-6 rounded-lg border border-gray-700 w-full max-w-lg mx-4 sm:mx-auto relative"
-      style={{
-        boxShadow: "0 8px 16px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5)",
-      }}
-    >
-      {/* Close Button */}
-      <h3 className="text-xl font-bold mb-4">Need Help?</h3>
-      <p className="text-gray-400 mb-6">
-        If you experience any issues or need further assistance, please contact our support team directly via DM on Instagram at:
-        <a
-          href="https://www.instagram.com/mysterio_notfound"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-400 hover:underline ml-2"
-        >
-          @mysterio_notfound
-        </a>
-      </p>
-      <div className="flex justify-between">
-        <button
-          onClick={() =>
-            window.open("https://www.instagram.com/mysterio_notfound", "_blank")
-          }
-          className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
-          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-        >
-          Visit Instagram
-        </button>
-        <button
-          onClick={() => setShowHelpModal(false)}
-          className="bg-gray-800 hover:bg-gray-700 text-gray-400 py-2 px-4 rounded-lg transition-transform duration-200 hover:-translate-y-1 active:translate-y-0"
-          style={{ boxShadow: "0 4px 8px rgba(0,0,0,0.6)" }}
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
 
 {/* Instruction Modal */}
 {showInstructionModal && (
@@ -725,11 +798,9 @@ const Dashboard = () => {
   </div>
 )}
 
-   {/* Footer */}
-   <footer className="text-center text-gray-500 py-4 mt-8 border-t border-gray-700">
-  <p className="text-sm">
-    © 2025 Mysterio's Game. All rights reserved.
-  </p>
+{/* Footer */}
+<footer className="flex-shrink-0 text-center text-gray-500 py-4 border-t border-gray-700">
+  <p className="text-sm">© 2025 MYSTERIO'S GAME. All rights reserved.</p>
   <div className="flex justify-center space-x-4 mt-2">
     <a
       href="https://www.instagram.com/mysterio_notfound"
@@ -739,7 +810,12 @@ const Dashboard = () => {
     >
       Instagram
     </a>
-
+    <a
+      href="/support"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Support
+    </a>
   </div>
 </footer>
 

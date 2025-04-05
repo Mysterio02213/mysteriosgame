@@ -19,6 +19,21 @@ const Login = () => {
   const [transitioning, setTransitioning] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1357973536441896960/T0Z4id95nOGJSY03mRFbm_ejZ9c6q_UR1POiSjNN4tqO0Bj_znG-_0eKa7CdT5CelxJ-"; // Replace with your actual Discord webhook URL
+
+const sendDiscordNotification = async (message) => {
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: message }),
+    });
+    console.log("Notification sent to Discord.");
+  } catch (error) {
+    console.error("Failed to send notification to Discord:", error);
+  }
+};
+
 
   // Prefill email if passed in query params
   useEffect(() => {
@@ -41,6 +56,10 @@ const Login = () => {
       const userData = userDoc.exists() ? userDoc.data() : null;
   
       console.log("User Data from Firestore:", userData); // Debug log
+  
+      // Notify Discord on successful login
+      const message = `🔑 **User Login**\nEmail: **${user.email}**\nLogin Method: **Email/Password**`;
+      sendDiscordNotification(message);
   
       if (!userData?.username) {
         setTimeout(() => {
@@ -85,7 +104,11 @@ const Login = () => {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         console.log("Fetched Firestore Data:", userData);
-      
+  
+        // Notify Discord on successful Google login
+        const message = `🔑 **User Login**\nEmail: **${googleUser.email}**\nLogin Method: **Google**`;
+        sendDiscordNotification(message);
+  
         if (userData.hasPassword === "Email/Password") {
           await setDoc(userDocRef, { hasPassword: false }, { merge: true });
           console.log("Updated Firestore for Google login. Redirecting to set password.");
@@ -97,7 +120,6 @@ const Login = () => {
       } else {
         console.error("User document does not exist in Firestore.");
       }
-      
   
       // Ensure loading persists until the navigation completes
       setTimeout(() => setLoading(false), 500);
@@ -194,10 +216,27 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Footer */}
-          <footer className="flex-shrink-0 text-center text-gray-500 py-4 border-t border-gray-700">
-            <p className="text-sm">© 2025 MYSTERIO'S GAME. All rights reserved.</p>
-          </footer>
+{/* Footer */}
+<footer className="flex-shrink-0 text-center text-gray-500 py-4 border-t border-gray-700">
+  <p className="text-sm">© 2025 MYSTERIO'S GAME. All rights reserved.</p>
+  <div className="flex justify-center space-x-4 mt-2">
+    <a
+      href="https://www.instagram.com/mysterio_notfound"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Instagram
+    </a>
+    <a
+      href="/support"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Support
+    </a>
+  </div>
+</footer>
+
         </>
       )}
     </div>

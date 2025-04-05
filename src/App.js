@@ -9,6 +9,7 @@ import Dashboard from "./components/Dashboard";
 import SetUsername from "./components/SetUsername";
 import SetPassword from "./components/SetPassword"; // Import the SetPassword component
 import AdminPanel from "./components/AdminPanel";
+import SupportPage from "./components/SupportPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -65,99 +66,106 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        {/* Redirect based on user, username, and password state */}
-        <Route
-          path="/"
-          element={
-            user ? (
-              hasUsername ? (
-                hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
-              ) : (
-                <Navigate to="/set-username" />
-              )
+<Router>
+  <Routes>
+    {/* Redirect based on user, username, and password state */}
+    <Route
+      path="/"
+      element={
+        user ? (
+          hasUsername ? (
+            hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
+          ) : (
+            <Navigate to="/set-username" />
+          )
+        ) : (
+          <Login />
+        )
+      }
+    />
+    <Route
+      path="/login"
+      element={
+        user ? (
+          hasUsername ? (
+            hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
+          ) : (
+            <Navigate to="/set-username" />
+          )
+        ) : (
+          <Login />
+        )
+      }
+    />
+    <Route
+      path="/signup"
+      element={
+        user ? (
+          hasUsername ? (
+            hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
+          ) : (
+            <Navigate to="/set-username" />
+          )
+        ) : (
+          <Signup />
+        )
+      }
+    />
+    <Route
+      path="/set-username"
+      element={
+        user && !hasUsername ? (
+          <SetUsername setHasUsername={setHasUsername} />
+        ) : (
+          <Navigate to="/dashboard" />
+        )
+      }
+    />
+    <Route
+      path="/set-password"
+      element={
+        transitioning || loading ? (
+          <div className="flex justify-center items-center min-h-screen bg-black">
+            <div className="loader" style={{ width: "100px", height: "100px" }}></div>
+          </div>
+        ) : user && hasPassword === "Email/Password" ? (
+          <Navigate to="/dashboard" /> // Redirect to dashboard if hasPassword is valid
+        ) : user && hasPassword !== "Email/Password" ? (
+          <SetPassword setHasPassword={setHasPassword} /> // Render Set Password Page
+        ) : (
+          <Navigate to="/login" /> // Fallback for missing user
+        )
+      }
+    />
+    <Route
+      path="/dashboard"
+      element={
+        user ? (
+          hasUsername ? (
+            hasPassword ? (
+              <Dashboard />
             ) : (
-              <Login />
+              <Navigate to="/set-password" /> // Adjusted for "false" handling
             )
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            user ? (
-              hasUsername ? (
-                hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
-              ) : (
-                <Navigate to="/set-username" />
-              )
-            ) : (
-              <Login />
-            )
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            user ? (
-              hasUsername ? (
-                hasPassword ? <Navigate to="/dashboard" /> : <Navigate to="/set-password" />
-              ) : (
-                <Navigate to="/set-username" />
-              )
-            ) : (
-              <Signup />
-            )
-          }
-        />
-        <Route
-          path="/set-username"
-          element={
-            user && !hasUsername ? (
-              <SetUsername setHasUsername={setHasUsername} />
-            ) : (
-              <Navigate to="/dashboard" />
-            )
-          }
-        />
-        <Route
-path="/set-password"
-element={
-  transitioning || loading ? (
-    <div className="flex justify-center items-center min-h-screen bg-black">
-      <div className="loader" style={{ width: "100px", height: "100px" }}></div>
-    </div>
-  ) : user && hasPassword === "Email/Password" ? (
-    <Navigate to="/dashboard" /> // Redirect to dashboard if hasPassword is valid
-  ) : user && hasPassword !== "Email/Password" ? (
-    <SetPassword setHasPassword={setHasPassword} /> // Render Set Password Page
-  ) : (
-    <Navigate to="/login" /> // Fallback for missing user
-  )
-}
-/>
+          ) : (
+            <Navigate to="/set-username" />
+          )
+        ) : (
+          <Navigate to="/login" />
+        )
+      }
+    />
+    <Route
+      path="/admin"
+      element={user ? <AdminPanel /> : <Navigate to="/login" />}
+    />
+    <Route
+      path="/support"
+      element={user ? <SupportPage /> : <Navigate to="/login" />}
+    />
+  </Routes>
+</Router>
 
-        <Route
-          path="/dashboard"
-          element={
-            user ? (
-              hasUsername ? (
-                hasPassword ? (
-                  <Dashboard />
-                ) : (
-                  <Navigate to="/set-password" /> // Adjusted for "false" handling
-                )
-              ) : (
-                <Navigate to="/set-username" />
-              )
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route path="/admin" element={user ? <AdminPanel /> : <Navigate to="/login" />} />
-      </Routes>
-    </Router>
   );
 }
 

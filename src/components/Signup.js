@@ -15,6 +15,21 @@ const Signup = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1357973536441896960/T0Z4id95nOGJSY03mRFbm_ejZ9c6q_UR1POiSjNN4tqO0Bj_znG-_0eKa7CdT5CelxJ-"; // Replace with your actual webhook URL
+
+const sendDiscordNotification = async (message) => {
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: message }),
+    });
+    console.log("Notification sent to Discord.");
+  } catch (error) {
+    console.error("Failed to send notification to Discord:", error);
+  }
+};
+
 
   // Helper function to update form data state
   const handleInputChange = (e) =>
@@ -37,6 +52,10 @@ const Signup = () => {
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, { email: user.email, username: null, hasPassword: "Email/Password" });
   
+      // Send notification to Discord
+      const message = `🎉 **New Account Created**\nEmail: **${user.email}**\nSignup Method: **Email/Password**`;
+      sendDiscordNotification(message);
+  
       // Fetch Firestore fields after signup
       const userDoc = await getDoc(userDocRef);
       const userData = userDoc.exists() ? userDoc.data() : { username: null, hasPassword: "Email/Password" };
@@ -55,8 +74,6 @@ const Signup = () => {
       setLoading(false);
     }
   };
-  
-  
   
   // Handle Google signup
   
@@ -82,6 +99,11 @@ const Signup = () => {
         setTimeout(() => navigate("/set-password"), 500); // Redirect after validation
       } else {
         await setDoc(userDocRef, { email: googleUser.email, username: null, hasPassword: false });
+  
+        // Send notification to Discord
+        const message = `🎉 **New Account Created**\nEmail: **${googleUser.email}**\nSignup Method: **Google**`;
+        sendDiscordNotification(message);
+  
         setTimeout(() => navigate("/dashboard"), 500); // Redirect for new users
       }
     } catch (error) {
@@ -90,7 +112,8 @@ const Signup = () => {
     } finally {
       setLoading(false);
     }
-  };  
+  };
+  
   
   // Error handling for email/password signup
   const getSignupErrorMessage = (code) => {
@@ -196,20 +219,27 @@ const Signup = () => {
             </div>
           </div>
 
-          {/* Footer */}
-          <footer className="flex-shrink-0 text-center text-gray-500 py-4 border-t border-gray-700">
-            <p className="text-sm">© 2025 MYSTERIO'S GAME. All rights reserved.</p>
-            <div className="flex justify-center space-x-4 mt-2">
-              <a
-                href="https://www.instagram.com/mysterio_notfound"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-blue-400 transition duration-200"
-              >
-                Instagram
-              </a>
-            </div>
-          </footer>
+{/* Footer */}
+<footer className="flex-shrink-0 text-center text-gray-500 py-4 border-t border-gray-700">
+  <p className="text-sm">© 2025 MYSTERIO'S GAME. All rights reserved.</p>
+  <div className="flex justify-center space-x-4 mt-2">
+    <a
+      href="https://www.instagram.com/mysterio_notfound"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Instagram
+    </a>
+    <a
+      href="/support"
+      className="text-gray-400 hover:text-blue-400 transition duration-200"
+    >
+      Support
+    </a>
+  </div>
+</footer>
+
         </>
       )}
     </div>
